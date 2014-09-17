@@ -343,6 +343,9 @@ Plot.prototype.forceAxisZero = function(arg1, arg2) {
     this.redraw_();
   }
 };
+Plot.prototype.getAxisRanges = function() {
+  return [this.axes_.xRange(), this.axes_.yRange()];
+};
 // Forces the axis ranges. These are retained for future plot commands.
 // Call with no params to reset to auto mode.
 Plot.prototype.setAxisRanges = function(xAxisRange, yAxisRange) {

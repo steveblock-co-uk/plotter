@@ -102,14 +102,12 @@
 
         plot.plot(
             data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay }),
-            //data.map(function(entry) { return 100 * (entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0)) / startMass }),
             data.map(function(entry) { return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0) }),
             'red',
             '.');
         plot.setGridOn(true);
 
-        var endDay = Math.ceil((new Date(data[data.length - 1].timestamp) - startTimestamp) / kMillisecondsPerDay);
-endDay = 20;
+        var endDay = plot.getAxisRanges()[0].max();
         var startMassesGrams = [3700, 3750, 3800];
         plot.setHoldOn(true);
         startMassesGrams.forEach(function(startMass) {
