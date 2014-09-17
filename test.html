@@ -53,6 +53,33 @@
         tester.test('calculateAxisTick(12)', '2');
       }
 
+      function areObjectsEqual(a, b) {
+        if (typeof a != typeof b) {
+          console.log('Types unequal: ' + typeof a + ', ' + typeof b);
+          return false;
+        }
+        if (typeof a == 'object') {
+          for (i in a) {
+            if (!areObjectsEqual(a[i], b[i])) {
+              //console.log('Unequal property ' + i);
+              return false;
+            }
+          }
+          return true;
+        }
+        return a == b;
+      }
+      function createTextSpan(text) {
+        var span = document.createElement('span');
+        span.innerText = text;
+        return span;
+      }
+      function createDiv(className) {
+        var div = document.createElement('div');
+        div.className = className;
+        return div;
+      }
+
       function Tester(resultsDiv) {
         this.resultsDiv_ = resultsDiv;
         this.resultsDiv_.innerHTML = '';
