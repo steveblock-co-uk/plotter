@@ -1,5 +1,4 @@
 // TODO
-// Grid dashed lines
 // Axis tick rounding errors
 // Axis label rounding
 
@@ -174,29 +173,37 @@ Axes.prototype.draw = function(context, rect) {
   var tickLength = 5;
 
   var xTickFirst = roundToMultiple(this.xRange_.min(), this.xTick_, true);
-  context.beginPath();
   for (var x = xTickFirst; x <= this.xRange_.max(); x += this.xTick_) {
+    context.beginPath();
     var xCoord = rect.xInterpolate(this.xRange_.fraction(x));
     context.moveTo(xCoord, rect.yMax() + tickLength); 
     context.lineTo(xCoord, rect.yMax());
     context.fillText(x, xCoord, rect.yMax() + 3 * tickLength);
+    context.stroke();
     if (this.gridOn_) {
-      // TODO: Make dashed
+      context.setLineDash([1, 1]);
+      context.moveTo(xCoord, rect.yMax());
       context.lineTo(xCoord, rect.y());
+      context.stroke();
+      context.setLineDash([]);
     }
   }
   var yTickFirst = roundToMultiple(this.yRange_.min(), this.yTick_, true);
   for (var y = yTickFirst; y <= this.yRange_.max(); y += this.yTick_) {
+    context.beginPath();
     var yCoord = rect.yInterpolate(1 - this.yRange_.fraction(y));
     context.moveTo(rect.x() - tickLength, yCoord); 
     context.lineTo(rect.x(), yCoord);
-    if (this.gridOn_) {
-      // TODO: Make dashed
-      context.lineTo(rect.xMax(), yCoord);
-    }
     context.fillText(y, rect.x() - 5 * tickLength, yCoord);
+    context.stroke();
+    if (this.gridOn_) {
+      context.setLineDash([1, 1]);
+      context.moveTo(rect.x(), yCoord);
+      context.lineTo(rect.xMax(), yCoord);
+      context.stroke();
+      context.setLineDash([]);
+    }
   }
-  context.stroke();
 };
 
 /////////////////////////////////////////////////////////////////////////
