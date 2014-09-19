@@ -7,8 +7,9 @@
         var kMillisecondsPerDay = 1000 * 60 * 60 * 24;
         var kOuncesToGrams = 28.3495;
         var kDisposableDiaperMassGrams = 20;
-        var kReusableDiaperMassGrams = 2.5 * kOuncesToGrams;
+        var kReusableDiaperMassGrams = 80;
         var kDressMassGrams = 92;
+        var kOnesieMassGrams = 78;
         var data = [
           {
             timestamp: '2014/08/27 21:00',
@@ -96,6 +97,14 @@
             timestamp: '2014/09/16 15:00',
             totalMassGrams: 4354,
             nonBabyMassGrams: kReusableDiaperMassGrams + kDressMassGrams
+          }, {
+            timestamp: '2014/09/17 15:00',
+            totalMassGrams: 4324,
+            nonBabyMassGrams: kReusableDiaperMassGrams + kOnesieMassGrams
+          }, {
+            timestamp: '2014/09/18 14:00',
+            totalMassGrams: 4348,
+            nonBabyMassGrams: kReusableDiaperMassGrams + kOnesieMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
