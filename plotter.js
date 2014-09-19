@@ -244,23 +244,37 @@ Plot.prototype.createCanvas_ = function() {
   this.canvas_.height = this.height_;
   this.context_ = this.canvas_.getContext('2d');
 };
-Plot.prototype.plot = function(x, y, color, marker, drawLine) {
+Plot.prototype.plot = function(x, y, color, marker, line) {
   console.log('Plot.plot()');
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
   }
-  if (drawLine === undefined) {
-    drawLine = true;
+  if (marker === undefined) {
+    marker = '';
+  }
+  if (line === undefined) {
+    line = '-';
   }
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, color, marker, drawLine);
+  this.updateData_(x, y, color, marker, line);
   if (!this.axisRangesForced_) {
     this.calculateDefaultAxisRanges_();
   }
   this.redraw_();
 };
+function getLineDash(shorthand) {
+  switch(shorthand) {
+    case '--':
+      return [6, 6];
+    case ':':
+      return [2, 2];
+    case '-.':
+      return [6, 2, 2, 2];
+  }
+  return [];
+}
 Plot.prototype.redraw_ = function() {
   console.log('Plot.redraw_()');
   if (this.dataSeries_.length === 0) {
@@ -272,16 +286,18 @@ Plot.prototype.redraw_ = function() {
     var data = this.dataSeries_[i];
     this.context_.strokeStyle = data.color === undefined ? 'black' : data.color;
     // Line
-    if (data.drawLine) {
+    if (data.line !== '') {
+      this.context_.setLineDash(getLineDash(data.line));
       this.context_.beginPath();
       this.context_.moveTo(this.xCoord_(data.x[0]), this.yCoord_(data.y[0]));
       for (var j = 0; j < data.x.length; j++ ) {
         this.context_.lineTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]));
       }
       this.context_.stroke();
+      this.context_.setLineDash([]);
     }
     // Markers - need separate loop as they count as part of the stroke.
-    if (data.marker !== undefined) {
+    if (data.marker !== '') {
       var radius = 3;
       for (var j = 0; j < data.x.length; j++ ) {
         this.context_.beginPath();
@@ -299,9 +315,9 @@ Plot.prototype.redraw_ = function() {
     }
   }
 };
-Plot.prototype.updateData_ = function(x, y, color, marker, drawLine) {
+Plot.prototype.updateData_ = function(x, y, color, marker, line) {
   console.log('Plot.updateData_()');
-  this.dataSeries_.push({x: x, y: y, color: color, marker: marker, drawLine: drawLine});
+  this.dataSeries_.push({x: x, y: y, color: color, marker: marker, line: line});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));

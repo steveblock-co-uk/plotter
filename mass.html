@@ -124,7 +124,7 @@
         var startMassesGrams = [3700, 3750, 3800];
         plot.setHoldOn(true);
         startMassesGrams.forEach(function(startMass) {
-          plot.plot([0, endDay], [startMass, startMass + endDay * 20], 'blue');
+          plot.plot([0, endDay], [startMass, startMass + endDay * 20], 'blue', undefined, '--');
         });
       }
     </script>
