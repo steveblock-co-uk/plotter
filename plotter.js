@@ -297,20 +297,18 @@ Plot.prototype.redraw_ = function() {
       this.context_.setLineDash([]);
     }
     // Markers - need separate loop as they count as part of the stroke.
-    if (data.marker !== '') {
-      var radius = 3;
-      for (var j = 0; j < data.x.length; j++ ) {
-        this.context_.beginPath();
-        if (data.marker === '.') {
-          this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), 1, 0, 2 * Math.PI);
-          // TODO: Fill?
-          this.context_.stroke();
-        } else if (data.marker === 'o') {
-          this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), radius, 0, 2 * Math.PI);
-          this.context_.stroke();
-        } else if (data.marker === 's') {
-          this.context_.strokeRect(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]) - radius, 2 * radius, 2 * radius);
-        }
+    var radius = 3;
+    for (var j = 0; j < data.x.length; j++ ) {
+      this.context_.beginPath();
+      if (data.marker === '.') {
+        this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), 1, 0, 2 * Math.PI);
+        // TODO: Fill?
+        this.context_.stroke();
+      } else if (data.marker === 'o') {
+        this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), radius, 0, 2 * Math.PI);
+        this.context_.stroke();
+      } else if (data.marker === 's') {
+        this.context_.strokeRect(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]) - radius, 2 * radius, 2 * radius);
       }
     }
   }
