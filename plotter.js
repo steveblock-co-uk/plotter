@@ -309,6 +309,12 @@ Plot.prototype.redraw_ = function() {
         this.context_.stroke();
       } else if (data.marker === 's') {
         this.context_.strokeRect(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]) - radius, 2 * radius, 2 * radius);
+      } else if (marker === '+') {
+        this.context_.moveTo(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]));
+        this.context_.lineTo(this.xCoord_(data.x[j]) + radius, this.yCoord_(data.y[j]));
+        this.context_.moveTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]) - radius);
+        this.context_.lineTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]) + radius);
+        this.context_.stroke();
       }
     }
   }
