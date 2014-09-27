@@ -315,6 +315,13 @@ Plot.prototype.redraw_ = function() {
         this.context_.moveTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]) - radius);
         this.context_.lineTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]) + radius);
         this.context_.stroke();
+      } else if (marker === 'x') {
+        var radiusByRootTwo = radius / Math.sqrt(2);
+        this.context_.moveTo(this.xCoord_(data.x[j]) - radiusByRootTwo, this.yCoord_(data.y[j]) - radiusByRootTwo);
+        this.context_.lineTo(this.xCoord_(data.x[j]) + radiusByRootTwo, this.yCoord_(data.y[j]) + radiusByRootTwo);
+        this.context_.moveTo(this.xCoord_(data.x[j]) - radiusByRootTwo, this.yCoord_(data.y[j]) + radiusByRootTwo);
+        this.context_.lineTo(this.xCoord_(data.x[j]) + radiusByRootTwo, this.yCoord_(data.y[j]) - radiusByRootTwo);
+        this.context_.stroke();
       }
     }
   }
