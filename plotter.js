@@ -244,13 +244,16 @@ Plot.prototype.createCanvas_ = function() {
   this.canvas_.height = this.height_;
   this.context_ = this.canvas_.getContext('2d');
 };
-Plot.prototype.plot = function(x, y, color, marker, line) {
+Plot.prototype.plot = function(x, y, color, markers, line) {
   console.log('Plot.plot()');
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
   }
-  if (marker === undefined) {
-    marker = '';
+  if (markers === undefined) {
+    markers = [''];
+  }
+  if (!Array.isArray(markers)) {
+    markers = [markers];
   }
   if (line === undefined) {
     line = '-';
@@ -258,7 +261,7 @@ Plot.prototype.plot = function(x, y, color, marker, line) {
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, color, marker, line);
+  this.updateData_(x, y, color, markers, line);
   if (!this.axisRangesForced_) {
     this.calculateDefaultAxisRanges_();
   }
@@ -299,15 +302,16 @@ Plot.prototype.redraw_ = function() {
     // Markers - need separate loop as they count as part of the stroke.
     var radius = 3;
     for (var j = 0; j < data.x.length; j++ ) {
+      var marker = data.markers[j % data.markers.length];
       this.context_.beginPath();
-      if (data.marker === '.') {
+      if (marker === '.') {
         this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), 1, 0, 2 * Math.PI);
         // TODO: Fill?
         this.context_.stroke();
-      } else if (data.marker === 'o') {
+      } else if (marker === 'o') {
         this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), radius, 0, 2 * Math.PI);
         this.context_.stroke();
-      } else if (data.marker === 's') {
+      } else if (marker === 's') {
         this.context_.strokeRect(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]) - radius, 2 * radius, 2 * radius);
       } else if (marker === '+') {
         this.context_.moveTo(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]));
@@ -326,9 +330,9 @@ Plot.prototype.redraw_ = function() {
     }
   }
 };
-Plot.prototype.updateData_ = function(x, y, color, marker, line) {
+Plot.prototype.updateData_ = function(x, y, color, markers, line) {
   console.log('Plot.updateData_()');
-  this.dataSeries_.push({x: x, y: y, color: color, marker: marker, line: line});
+  this.dataSeries_.push({x: x, y: y, color: color, markers: markers, line: line});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));

@@ -13,21 +13,27 @@
         var data = [
           {
             timestamp: '2014/08/27 21:00',
+            scale: 'Hospital',
             totalMassGrams: 4105
           }, {
             timestamp: '2014/08/29 11:00',
+            scale: 'Hospital',
             totalMassGrams: 3815
           }, {
             timestamp: '2014/08/29 18:00',
+            scale: 'Hospital',
             totalMassGrams: 3790
           }, {
             timestamp: '2014/08/31 13:00',
+            scale: 'Nurse',
             totalMassGrams: 3886 // Dubious!
           }, {
             timestamp: '2014/09/01 02:00',
+            scale: 'ER',
             totalMassGrams: 3820
           }, {
             timestamp: '2014/09/02 16:00',
+            scale: 'Doctor',
             totalMassGrams: 3880,
             nonBabyMassGrams: kDisposableDiaperMassGrams
           }, {
@@ -44,6 +50,7 @@
             nonBabyMassGrams: kReusableDiaperMassGrams
           }, {
             timestamp: '2014/09/08 11:40',
+            scale: 'Doctor',
             totalMassGrams: 3970,
             nonBabyMassGrams: kReusableDiaperMassGrams
           }, {
@@ -76,6 +83,7 @@
             nonBabyMassGrams: kReusableDiaperMassGrams
           }, {
             timestamp: '2014/09/12 13:30',
+            scale: 'Doctor',
             totalMassGrams: 4050
           }, {
             timestamp: '2014/09/12 16:15',
@@ -126,6 +134,16 @@
         var startTimestamp = new Date(data[0].timestamp);
         var startMass = data[0].totalMassGrams;
 
+        var scaleMarkers = {};
+        var kThreeBridges = 'Three Bridges';
+        var markers = ['+', 's', 'o', 'x'];
+        data.forEach(function(entry) {
+          if (entry.scale && entry.scale !== kThreeBridges && !scaleMarkers[entry.scale]) {
+            scaleMarkers[entry.scale] = markers[Object.keys(scaleMarkers).length % markers.length];
+          }
+        });
+        scaleMarkers[kThreeBridges] = '.';
+
         var plot = new Plot(1000, 500);
         document.body.appendChild(plot.canvas());
 
@@ -133,7 +151,7 @@
             data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay }),
             data.map(function(entry) { return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0) }),
             'red',
-            '.');
+            data.map(function(entry) { return scaleMarkers[entry.scale ? entry.scale : kThreeBridges]; }));
         plot.setGridOn(true);
 
         var endDay = plot.getAxisRanges()[0].max();
