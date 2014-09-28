@@ -87,14 +87,14 @@
       }
       Tester.prototype.test = function(expressionString, resultString) {
         var actual = eval(expressionString);
-        // Need ro make sure the eval has a return value?!
+        // Need to make sure the eval has a return value?!
         var expected = eval('foo = ' + resultString);
         var div = createDiv('test pass');
         div.appendChild(createTextSpan(expressionString));
         if (!areObjectsEqual(expected, actual)) {
           div.appendChild(createTextSpan(' : Expected ' + resultString));
+          div.appendChild(createTextSpan(' : Actual ' + actual));
           div.className = 'test fail';
-          // TODO: Print actual result.
         } else {
           div.appendChild(createTextSpan(' : ' + resultString));
         }
