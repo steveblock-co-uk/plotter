@@ -257,6 +257,12 @@ Plot.applyStyleDefaults = function(style) {
   if (!Array.isArray(style.markers)) {
     style.markers = [style.markers];
   }
+  if (style.markerColors === undefined) {
+    style.markerColors = [style.lineColor];
+  }
+  if (!Array.isArray(style.markerColors)) {
+    style.markerColors = [style.markerColors];
+  }
   if (style.lineStyle === undefined) {
     style.lineStyle = '-';
   }
@@ -272,7 +278,7 @@ Plot.prototype.plot = function(x, y, style) {
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle);
+  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle, style.markerColors);
   if (!this.axisRangesForced_) {
     this.calculateDefaultAxisRanges_();
   }
@@ -310,10 +316,11 @@ Plot.prototype.redraw_ = function() {
       this.context_.stroke();
       this.context_.setLineDash([]);
     }
-    // Markers - need separate loop as they count as part of the stroke.
     var radius = 3;
     for (var j = 0; j < data.x.length; j++ ) {
       var marker = data.markers[j % data.markers.length];
+      var markerColor = data.markerColors[j % data.markerColors.length];
+      this.context_.strokeStyle = markerColor;
       this.context_.beginPath();
       if (marker === '.') {
         this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), 1, 0, 2 * Math.PI);
@@ -341,9 +348,9 @@ Plot.prototype.redraw_ = function() {
     }
   }
 };
-Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle) {
+Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors) {
   console.log('Plot.updateData_()');
-  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle});
+  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));

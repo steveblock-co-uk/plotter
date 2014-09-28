@@ -151,15 +151,15 @@
         var startTimestamp = new Date(data[0].timestamp);
         var startMass = data[0].totalMassGrams;
 
-        var scaleMarkers = {};
+        var scaleColors = {};
         var kThreeBridges = 'Three Bridges';
-        var markers = ['+', 's', 'o', 'x'];
+        var colors = ['blue', 'cyan', 'green', 'black'];
         data.forEach(function(entry) {
-          if (entry.scale && entry.scale !== kThreeBridges && !scaleMarkers[entry.scale]) {
-            scaleMarkers[entry.scale] = markers[Object.keys(scaleMarkers).length % markers.length];
+          if (entry.scale && entry.scale !== kThreeBridges && !scaleColors[entry.scale]) {
+            scaleColors[entry.scale] = colors[Object.keys(scaleColors).length % colors.length];
           }
         });
-        scaleMarkers[kThreeBridges] = '.';
+        scaleColors[kThreeBridges] = 'red';
 
         var plot = new Plot(1000, 500);
         document.body.appendChild(plot.canvas());
@@ -169,7 +169,8 @@
             data.map(function(entry) { return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0) }),
             {
               lineColor: 'red',
-              markers: data.map(function(entry) { return scaleMarkers[entry.scale ? entry.scale : kThreeBridges]; })
+              markers: data.map(function(entry) { return (!entry.scale || entry.scale === kThreeBridges) ? '.' : 'o'; }),
+              markerColors: data.map(function(entry) { return scaleColors[entry.scale ? entry.scale : kThreeBridges]; })
             });
         plot.setGridOn(true);
 
