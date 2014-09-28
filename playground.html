@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="plotter.js"></script>
+    <script type="text/javascript">
+      function init() {
+        plot = new Plot(1000, 500);
+        document.body.appendChild(plot.canvas());
+        plot.plot([0, 2], [0, 2]);
+      }
+    </script>
+  </head>
+  <body onload="init();">
+  <body>
+</html>
