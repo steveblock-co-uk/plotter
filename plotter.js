@@ -244,7 +244,7 @@ Plot.prototype.createCanvas_ = function() {
   this.canvas_.height = this.height_;
   this.context_ = this.canvas_.getContext('2d');
 };
-Plot.prototype.plot = function(x, y, color, markers, line) {
+Plot.prototype.plot = function(x, y, lineColor, markers, line) {
   console.log('Plot.plot()');
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
@@ -261,7 +261,7 @@ Plot.prototype.plot = function(x, y, color, markers, line) {
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, color, markers, line);
+  this.updateData_(x, y, lineColor, markers, line);
   if (!this.axisRangesForced_) {
     this.calculateDefaultAxisRanges_();
   }
@@ -287,7 +287,7 @@ Plot.prototype.redraw_ = function() {
   this.axes_.draw(this.context_, this.plotRect_);
   for (var i = 0; i < this.dataSeries_.length; i++ ) {
     var data = this.dataSeries_[i];
-    this.context_.strokeStyle = data.color === undefined ? 'black' : data.color;
+    this.context_.strokeStyle = data.lineColor === undefined ? 'black' : data.lineColor;
     // Line
     if (data.line !== '') {
       this.context_.setLineDash(getLineDash(data.line));
@@ -330,9 +330,9 @@ Plot.prototype.redraw_ = function() {
     }
   }
 };
-Plot.prototype.updateData_ = function(x, y, color, markers, line) {
+Plot.prototype.updateData_ = function(x, y, lineColor, markers, line) {
   console.log('Plot.updateData_()');
-  this.dataSeries_.push({x: x, y: y, color: color, markers: markers, line: line});
+  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, line: line});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));
