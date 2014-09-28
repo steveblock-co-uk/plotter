@@ -167,15 +167,17 @@
         plot.plot(
             data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay }),
             data.map(function(entry) { return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0) }),
-            'red',
-            data.map(function(entry) { return scaleMarkers[entry.scale ? entry.scale : kThreeBridges]; }));
+            {
+              lineColor: 'red',
+              markers: data.map(function(entry) { return scaleMarkers[entry.scale ? entry.scale : kThreeBridges]; })
+            });
         plot.setGridOn(true);
 
         var endDay = plot.getAxisRanges()[0].max();
         var startMassesGrams = [3700, 3750, 3800];
         plot.setHoldOn(true);
         startMassesGrams.forEach(function(startMass) {
-          plot.plot([0, endDay], [startMass, startMass + endDay * 20], 'blue', undefined, '--');
+          plot.plot([0, endDay], [startMass, startMass + endDay * 20], {lineColor: 'blue', lineStyle: '--'});
         });
       }
     </script>

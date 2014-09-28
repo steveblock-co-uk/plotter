@@ -244,24 +244,35 @@ Plot.prototype.createCanvas_ = function() {
   this.canvas_.height = this.height_;
   this.context_ = this.canvas_.getContext('2d');
 };
-Plot.prototype.plot = function(x, y, lineColor, markers, lineStyle) {
+Plot.applyStyleDefaults = function(style) {
+  if (typeof style !== 'object') {
+    style = {};
+  }
+  if (style.lineColor === undefined) {
+    style.lineColor = 'black';
+  }
+  if (style.markers === undefined) {
+    style.markers = [''];
+  }
+  if (!Array.isArray(style.markers)) {
+    style.markers = [style.markers];
+  }
+  if (style.lineStyle === undefined) {
+    style.lineStyle = '-';
+  }
+  return style;
+};
+Plot.prototype.plot = function(x, y, style) {
   console.log('Plot.plot()');
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
   }
-  if (markers === undefined) {
-    markers = [''];
-  }
-  if (!Array.isArray(markers)) {
-    markers = [markers];
-  }
-  if (lineStyle === undefined) {
-    lineStyle = '-';
-  }
+  style = Plot.applyStyleDefaults(style);
+
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, lineColor, markers, lineStyle);
+  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle);
   if (!this.axisRangesForced_) {
     this.calculateDefaultAxisRanges_();
   }
@@ -287,7 +298,7 @@ Plot.prototype.redraw_ = function() {
   this.axes_.draw(this.context_, this.plotRect_);
   for (var i = 0; i < this.dataSeries_.length; i++ ) {
     var data = this.dataSeries_[i];
-    this.context_.strokeStyle = data.lineColor === undefined ? 'black' : data.lineColor;
+    this.context_.strokeStyle = data.lineColor;
     // Line
     if (data.lineStyle !== '') {
       this.context_.setLineDash(getLineDash(data.lineStyle));
