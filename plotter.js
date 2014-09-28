@@ -1,7 +1,3 @@
-// TODO
-// Axis tick rounding errors
-// Axis label rounding
-
 function arrayMin(x) {
   var result = x[0];
   for (var i = 1; i < x.length; i++) {
@@ -59,8 +55,14 @@ function calculateAxisRange(dataRange, forceZero) {
   return new Range(roundToMultiple(dataRange.min(), multiple, false),
                    roundToMultiple(dataRange.max(), multiple, true));
 }
+function calculateDecimalPlaces(x) {
+  return Math.max(0, -calculatePowerOfTen(x));
+}
+function calculatePowerOfTen(x) {
+  return Math.floor(Math.log(x) / Math.LN10);
+}
 function calculateOrder(x) {
-  return Math.pow(10, Math.floor(Math.log(x) / Math.LN10));
+  return Math.pow(10, calculatePowerOfTen(x));
 }
 function calculateAxisTick(axisRange) {
   var order = calculateOrder(axisRange);
@@ -172,13 +174,14 @@ Axes.prototype.draw = function(context, rect) {
   context.strokeRect(rect.x(), rect.y(), rect.width(), rect.height());
   var tickLength = 5;
 
+  var xDecimalPlaces = calculateDecimalPlaces(this.xTick_);
   var xTickFirst = roundToMultiple(this.xRange_.min(), this.xTick_, true);
   for (var x = xTickFirst; x <= this.xRange_.max(); x += this.xTick_) {
     context.beginPath();
     var xCoord = rect.xInterpolate(this.xRange_.fraction(x));
     context.moveTo(xCoord, rect.yMax() + tickLength); 
     context.lineTo(xCoord, rect.yMax());
-    context.fillText(x, xCoord, rect.yMax() + 3 * tickLength);
+    context.fillText(x.toFixed(xDecimalPlaces), xCoord, rect.yMax() + 3 * tickLength);
     context.stroke();
     if (this.gridOn_) {
       context.setLineDash([1, 1]);
@@ -188,13 +191,14 @@ Axes.prototype.draw = function(context, rect) {
       context.setLineDash([]);
     }
   }
+  var yDecimalPlaces = calculateDecimalPlaces(this.yTick_);
   var yTickFirst = roundToMultiple(this.yRange_.min(), this.yTick_, true);
   for (var y = yTickFirst; y <= this.yRange_.max(); y += this.yTick_) {
     context.beginPath();
     var yCoord = rect.yInterpolate(1 - this.yRange_.fraction(y));
     context.moveTo(rect.x() - tickLength, yCoord); 
     context.lineTo(rect.x(), yCoord);
-    context.fillText(y, rect.x() - 5 * tickLength, yCoord);
+    context.fillText(y.toFixed(yDecimalPlaces), rect.x() - 5 * tickLength, yCoord);
     context.stroke();
     if (this.gridOn_) {
       context.setLineDash([1, 1]);
