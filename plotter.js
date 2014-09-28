@@ -244,7 +244,7 @@ Plot.prototype.createCanvas_ = function() {
   this.canvas_.height = this.height_;
   this.context_ = this.canvas_.getContext('2d');
 };
-Plot.prototype.plot = function(x, y, lineColor, markers, line) {
+Plot.prototype.plot = function(x, y, lineColor, markers, lineStyle) {
   console.log('Plot.plot()');
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
@@ -255,13 +255,13 @@ Plot.prototype.plot = function(x, y, lineColor, markers, line) {
   if (!Array.isArray(markers)) {
     markers = [markers];
   }
-  if (line === undefined) {
-    line = '-';
+  if (lineStyle === undefined) {
+    lineStyle = '-';
   }
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, lineColor, markers, line);
+  this.updateData_(x, y, lineColor, markers, lineStyle);
   if (!this.axisRangesForced_) {
     this.calculateDefaultAxisRanges_();
   }
@@ -289,8 +289,8 @@ Plot.prototype.redraw_ = function() {
     var data = this.dataSeries_[i];
     this.context_.strokeStyle = data.lineColor === undefined ? 'black' : data.lineColor;
     // Line
-    if (data.line !== '') {
-      this.context_.setLineDash(getLineDash(data.line));
+    if (data.lineStyle !== '') {
+      this.context_.setLineDash(getLineDash(data.lineStyle));
       this.context_.beginPath();
       this.context_.moveTo(this.xCoord_(data.x[0]), this.yCoord_(data.y[0]));
       for (var j = 0; j < data.x.length; j++ ) {
@@ -330,9 +330,9 @@ Plot.prototype.redraw_ = function() {
     }
   }
 };
-Plot.prototype.updateData_ = function(x, y, lineColor, markers, line) {
+Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle) {
   console.log('Plot.updateData_()');
-  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, line: line});
+  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));
