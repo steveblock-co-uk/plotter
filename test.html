@@ -47,6 +47,7 @@
         tester.test('calculateAxisRange(new Range(-5, 5))', '{min_: -6, max_: 6}');
         // Tricky
         tester.test('calculateAxisRange(new Range(-15, 35))', '{min_: -20, max_: 40}');
+        tester.test('calculateAxisRange(new Range(-1, 100))', '{min_: -20, max_: 100}');
         // Intervals
         tester.test('calculateAxisTick(5)', '0.5');
         tester.test('calculateAxisTick(10)', '1');
