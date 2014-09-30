@@ -1,5 +1,4 @@
 // TODO
-// Clip lines to axes
 // Support specifying single axis and leaving other to auto
 // Force axis tick at zero
 // Draw axis zero in solid line
@@ -85,6 +84,34 @@ function calculateAxisTick(axisRange) {
   }
   return interval * order;
 }
+// Exclusive wrt end points of input line, but inclusive wrt end points of
+// horizontal/vertical line.
+function intersectHorizontalLine(x1, y1, x2, y2, value, start, end) {
+  if (y1 === y2) {
+    return null;
+  }
+  if ((value - y1) * (value - y2) >= 0) {
+    return null;
+  }
+  var xIntercept = x1 + (value - y1) * (x2 - x1) / (y2 - y1);
+  if (xIntercept >= start && xIntercept <= end) {
+    return {x: xIntercept, y: value};
+  }
+  return null;
+}
+function intersectVerticalLine(x1, y1, x2, y2, value, start, end) {
+  if (x1 === x2) {
+    return null;
+  }
+  if ((value - x1) * (value - x2) >= 0) {
+    return null;
+  }
+  var yIntercept = y1 + (value - x1) * (y2 - y1) / (x2 - x1);
+  if (yIntercept >= start && yIntercept <= end) {
+    return {x: value, y: yIntercept};
+  }
+  return null;
+}
 
 // TODO: Could merge this with Rect?
 function Range(min, max) {
@@ -151,6 +178,39 @@ Rect.prototype.xInterpolate = function(x) {
 };
 Rect.prototype.yInterpolate = function(y) {
   return this.y_ + this.height_ * y;
+};
+Rect.prototype.contains = function(x, y) {
+  return x >= this.x_ && x <= this.xMax() && y >= this.y_ && y <= this.yMax();
+};
+Rect.prototype.clipLine = function(x1, y1, x2, y2) {
+  var points = [];
+  if (this.contains(x1, y1)) {
+    points.push({x: x1, y: y1});
+  }
+  if (this.contains(x2, y2)) {
+    points.push({x: x2, y: y2});
+  }
+  if (points.length === 2) {
+    return points;
+  }
+  var intersections = [
+    // We must do two non-adjacent edges first, so that we don't double-count
+    // the same corner.
+    intersectHorizontalLine(x1, y1, x2, y2, this.y_, this.x_, this.xMax()),
+    intersectHorizontalLine(x1, y1, x2, y2, this.yMax(), this.x_, this.xMax()),
+    intersectVerticalLine(x1, y1, x2, y2, this.x_, this.y_, this.yMax()),
+    intersectVerticalLine(x1, y1, x2, y2, this.xMax(), this.y_, this.yMax())
+  ];
+  intersections.forEach(function(intersection) {
+    if (points.length < 2 && intersection != null) {
+      points.push(intersection);
+    }
+  });
+  if (points.length === 0) {
+    return null;
+  }
+  console.assert(points.length === 2, 'points.length = ' + points.length);
+  return points;
 };
 Rect.prototype.toString = function() {
   return '{x: ' + this.x_ + '; y: ' + this.y_ + '; width: ' + this.width_ + '; height: ' + this.height_ + '}';
@@ -315,18 +375,19 @@ Plot.prototype.redraw_ = function() {
     // Line
     if (data.lineStyle !== '') {
       this.context_.setLineDash(getLineDash(data.lineStyle));
-      this.context_.beginPath();
-      this.context_.moveTo(this.xCoord_(data.x[0]), this.yCoord_(data.y[0]));
-      for (var j = 0; j < data.x.length; j++ ) {
-        this.context_.lineTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]));
+      for (var j = 1; j < data.x.length; j++ ) {
+        this.drawLine_(this.xCoord_(data.x[j - 1]), this.yCoord_(data.y[j - 1]),
+                       this.xCoord_(data.x[j]), this.yCoord_(data.y[j]));
       }
-      this.context_.stroke();
       this.context_.setLineDash([]);
     }
     var radius = 3;
     for (var j = 0; j < data.x.length; j++ ) {
       var xCoord = this.xCoord_(data.x[j]);
       var yCoord = this.yCoord_(data.y[j]);
+      if (!this.plotRect_.contains(xCoord, yCoord)) {
+        continue;
+      }
       var marker = data.markers[j % data.markers.length];
       var markerColor = data.markerColors[j % data.markerColors.length];
       this.context_.strokeStyle = markerColor;
@@ -375,6 +436,21 @@ Plot.prototype.calculateDefaultAxisRanges_ = function() {
   var yAxisTick = calculateAxisTick(yAxisRange.range());
   this.axes_ = new Axes(xAxisRange, xAxisTick, yAxisRange, yAxisTick);
   this.axes_.setGridOn(this.gridOn_);
+};
+// Clips to plot rect.
+Plot.prototype.drawLine_ = function(x1Coord, y1Coord, x2Coord, y2Coord) {
+  var points = this.plotRect_.clipLine(x1Coord, y1Coord, x2Coord, y2Coord);
+  if (points === null) {
+    return;
+  }
+  console.assert(points.length === 2, 'points.length = ' + points.length);
+
+  // TODO: Consider using a single stroke for line segments that don't go
+  // outside the plot area.
+  this.context_.beginPath();
+  this.context_.moveTo(points[0].x, points[0].y);
+  this.context_.lineTo(points[1].x, points[1].y);
+  this.context_.stroke();
 };
 // TODO: Better to introduce Point type and do x and y together?
 Plot.prototype.xCoord_ = function(x) {
