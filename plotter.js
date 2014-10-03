@@ -1,5 +1,4 @@
 // TODO
-// Support specifying single axis and leaving other to auto
 // Force axis tick at zero
 // Draw axis zero in solid line
 
@@ -217,18 +216,28 @@ Rect.prototype.toString = function() {
 };
 
 /////////////////////////////////////////////////////////////////////////
-function Axes(xRange, xTick, yRange, yTick) {
-  this.xRange_ = xRange;
-  this.yRange_ = yRange;
-  this.xTick_ = xTick;
-  this.yTick_ = yTick;
+function Axes() {
   this.gridOn_ = false;
 }
+Axes.prototype.setXValues = function(range, tick) {
+  this.xRange_ = range;
+  this.xTick_ = tick;
+};
+Axes.prototype.setYValues = function(range, tick) {
+  this.yRange_ = range;
+  this.yTick_ = tick;
+};
 Axes.prototype.xRange = function() {
   return this.xRange_;
 };
 Axes.prototype.yRange = function() {
   return this.yRange_;
+};
+Axes.prototype.xTick = function() {
+  return this.xTick_;
+};
+Axes.prototype.yTick = function() {
+  return this.yTick_;
 };
 Axes.prototype.setGridOn = function(gridOn) {
   this.gridOn_ = gridOn;
@@ -281,9 +290,11 @@ function Plot(width, height) {
   this.height_ = height;
   this.forceXAxisZero_ = false;
   this.forceYAxisZero_ = false;
-  this.axisRangesForced = false;
+  this.xAxisRangeForced_ = false;
+  this.yAxisRangeForced_ = false;
   this.holdOn_ = false;
   this.gridOn_ = false;
+  this.axes_ = new Axes();
   this.clearData_();
   this.createCanvas_();
   var plotSize = 0.8;
@@ -347,8 +358,11 @@ Plot.prototype.plot = function(x, y, style) {
     this.clearData_();
   }
   this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle, style.markerColors);
-  if (!this.axisRangesForced_) {
-    this.calculateDefaultAxisRanges_();
+  if (!this.xAxisRangeForced_) {
+    this.setXAxisRange_();
+  }
+  if (!this.yAxisRangeForced_) {
+    this.setYAxisRange_();
   }
   this.redraw_();
 };
@@ -425,16 +439,24 @@ Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, marke
   this.yRange_.expand(arrayMin(y));
   this.yRange_.expand(arrayMax(y));
 };
-Plot.prototype.calculateDefaultAxisRanges_ = function() {
+Plot.prototype.setXAxisRange_ = function(range) {
   // This will be called again when some data is added in plot().
   if (this.dataSeries_.length === 0) {
     return;
   }
-  var xAxisRange = calculateAxisRange(this.xRange_, this.forceXAxisZero_);
-  var yAxisRange = calculateAxisRange(this.yRange_, this.forceYAxisZero_);
-  var xAxisTick = calculateAxisTick(xAxisRange.range());
-  var yAxisTick = calculateAxisTick(yAxisRange.range());
-  this.axes_ = new Axes(xAxisRange, xAxisTick, yAxisRange, yAxisTick);
+  var effectiveRange = range ? range : calculateAxisRange(this.xRange_, this.forceXAxisZero_);
+  var tick = calculateAxisTick(effectiveRange.range());
+  this.axes_.setXValues(effectiveRange, tick);
+  this.axes_.setGridOn(this.gridOn_);
+};
+Plot.prototype.setYAxisRange_ = function(range) {
+  // This will be called again when some data is added in plot().
+  if (this.dataSeries_.length === 0) {
+    return;
+  }
+  var effectiveRange = range ? range : calculateAxisRange(this.yRange_, this.forceYAxisZero_);
+  var tick = calculateAxisTick(effectiveRange.range());
+  this.axes_.setYValues(effectiveRange, tick);
   this.axes_.setGridOn(this.gridOn_);
 };
 // Clips to plot rect.
@@ -471,8 +493,12 @@ Plot.prototype.forceAxisZero = function(arg1, arg2) {
   }
   // If the axes are forced, don't update or redraw them, but leave the
   // flags above set for when forcing is disabled.
-  if (!this.axisRangesForced_) {
-    this.calculateDefaultAxisRanges_();
+  if (!this.xAxisRangeForced_) {
+    this.setXAxisRange_();
+    this.redraw_();
+  }
+  if (!this.yAxisRangeForced_) {
+    this.setYAxisRange_();
     this.redraw_();
   }
 };
@@ -480,17 +506,13 @@ Plot.prototype.getAxisRanges = function() {
   return [this.axes_.xRange(), this.axes_.yRange()];
 };
 // Forces the axis ranges. These are retained for future plot commands.
-// Call with no params to reset to auto mode.
+// Uses auto mode if either or both axis ranges are absent.
 Plot.prototype.setAxisRanges = function(xAxisRange, yAxisRange) {
-  if (xAxisRange === undefined && yAxisRange === undefined) {
-    this.axisRangesForced_ = false;
-    this.calculateDefaultAxisRanges_();
-  } else {
-    this.axisRangesForced_ = true;
-    var xAxisTick = calculateAxisTick(xAxisRange.range());
-    var yAxisTick = calculateAxisTick(yAxisRange.range());
-    this.axes_ = new Axes(xAxisRange, xAxisTick, yAxisRange, yAxisTick);
-    this.axes_.setGridOn(this.gridOn_);
-  }
+  this.xAxisRangeForced_ = !!xAxisRange;
+  this.setXAxisRange_(this.xAxisRangeForced_ ? xAxisRange : null);
+
+  this.yAxisRangeForced_ = !!yAxisRange;
+  this.setYAxisRange_(this.yAxisRangeForced_ ? yAxisRange : null);
+
   this.redraw_();
 };
