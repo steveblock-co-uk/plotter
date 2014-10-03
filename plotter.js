@@ -49,15 +49,16 @@ function roundTowardsZero(x, multiple) {
   return sign * multiple * Math.ceil(Math.abs(x) / multiple);
 }
 function calculateAxisRange(dataRange, forceZero) {
+  var localDataRange = new Range(dataRange.min(), dataRange.max());
   if (forceZero) {
-    dataRange.expand(0);
+    localDataRange.expand(0);
   }
-  var order = calculateOrder(dataRange.range());
-  var value = dataRange.range() / order;
+  var order = calculateOrder(localDataRange.range());
+  var value = localDataRange.range() / order;
   var baseMultiple = getMultiple(value);
   var multiple = baseMultiple * order
-  return new Range(roundToMultiple(dataRange.min(), multiple, false),
-                   roundToMultiple(dataRange.max(), multiple, true));
+  return new Range(roundToMultiple(localDataRange.min(), multiple, false),
+                   roundToMultiple(localDataRange.max(), multiple, true));
 }
 function calculateDecimalPlaces(x) {
   return Math.max(0, -calculatePowerOfTen(x));
