@@ -325,31 +325,33 @@ Plot.prototype.redraw_ = function() {
     }
     var radius = 3;
     for (var j = 0; j < data.x.length; j++ ) {
+      var xCoord = this.xCoord_(data.x[j]);
+      var yCoord = this.yCoord_(data.y[j]);
       var marker = data.markers[j % data.markers.length];
       var markerColor = data.markerColors[j % data.markerColors.length];
       this.context_.strokeStyle = markerColor;
       this.context_.beginPath();
       if (marker === '.') {
-        this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), 1, 0, 2 * Math.PI);
+        this.context_.arc(xCoord, yCoord, 1, 0, 2 * Math.PI);
         // TODO: Fill?
         this.context_.stroke();
       } else if (marker === 'o') {
-        this.context_.arc(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]), radius, 0, 2 * Math.PI);
+        this.context_.arc(xCoord, yCoord, radius, 0, 2 * Math.PI);
         this.context_.stroke();
       } else if (marker === 's') {
-        this.context_.strokeRect(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]) - radius, 2 * radius, 2 * radius);
+        this.context_.strokeRect(xCoord - radius, yCoord - radius, 2 * radius, 2 * radius);
       } else if (marker === '+') {
-        this.context_.moveTo(this.xCoord_(data.x[j]) - radius, this.yCoord_(data.y[j]));
-        this.context_.lineTo(this.xCoord_(data.x[j]) + radius, this.yCoord_(data.y[j]));
-        this.context_.moveTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]) - radius);
-        this.context_.lineTo(this.xCoord_(data.x[j]), this.yCoord_(data.y[j]) + radius);
+        this.context_.moveTo(xCoord - radius, yCoord);
+        this.context_.lineTo(xCoord + radius, yCoord);
+        this.context_.moveTo(xCoord, yCoord - radius);
+        this.context_.lineTo(xCoord, yCoord + radius);
         this.context_.stroke();
       } else if (marker === 'x') {
         var radiusByRootTwo = radius / Math.sqrt(2);
-        this.context_.moveTo(this.xCoord_(data.x[j]) - radiusByRootTwo, this.yCoord_(data.y[j]) - radiusByRootTwo);
-        this.context_.lineTo(this.xCoord_(data.x[j]) + radiusByRootTwo, this.yCoord_(data.y[j]) + radiusByRootTwo);
-        this.context_.moveTo(this.xCoord_(data.x[j]) - radiusByRootTwo, this.yCoord_(data.y[j]) + radiusByRootTwo);
-        this.context_.lineTo(this.xCoord_(data.x[j]) + radiusByRootTwo, this.yCoord_(data.y[j]) - radiusByRootTwo);
+        this.context_.moveTo(xCoord - radiusByRootTwo, yCoord - radiusByRootTwo);
+        this.context_.lineTo(xCoord + radiusByRootTwo, yCoord + radiusByRootTwo);
+        this.context_.moveTo(xCoord - radiusByRootTwo, yCoord + radiusByRootTwo);
+        this.context_.lineTo(xCoord + radiusByRootTwo, yCoord - radiusByRootTwo);
         this.context_.stroke();
       }
     }
