@@ -1,3 +1,9 @@
+// TODO
+// Clip lines to axes
+// Support specifying single axis and leaving other to auto
+// Force axis tick at zero
+// Draw axis zero in solid line
+
 function arrayMin(x) {
   var result = x[0];
   for (var i = 1; i < x.length; i++) {
@@ -169,7 +175,6 @@ Axes.prototype.setGridOn = function(gridOn) {
 };
 // TODO: Allow force of equal scales?
 Axes.prototype.draw = function(context, rect) {
-  console.log('Axes.draw()');
   context.strokeStyle = 'black';
   context.strokeRect(rect.x(), rect.y(), rect.width(), rect.height());
   var tickLength = 5;
@@ -273,7 +278,6 @@ Plot.applyStyleDefaults = function(style) {
   return style;
 };
 Plot.prototype.plot = function(x, y, style) {
-  console.log('Plot.plot()');
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
   }
@@ -300,7 +304,6 @@ function getLineDash(shorthand) {
   return [];
 }
 Plot.prototype.redraw_ = function() {
-  console.log('Plot.redraw_()');
   if (this.dataSeries_.length === 0) {
     return;
   }
@@ -353,29 +356,21 @@ Plot.prototype.redraw_ = function() {
   }
 };
 Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors) {
-  console.log('Plot.updateData_()');
   this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));
   this.yRange_.expand(arrayMax(y));
-  console.log('xRange: ' + this.xRange_);
-  console.log('yRange: ' + this.yRange_);
 };
 Plot.prototype.calculateDefaultAxisRanges_ = function() {
-  console.log('Plot.calculateDefaultAxisRanges_()');
   // This will be called again when some data is added in plot().
   if (this.dataSeries_.length === 0) {
     return;
   }
   var xAxisRange = calculateAxisRange(this.xRange_, this.forceXAxisZero_);
   var yAxisRange = calculateAxisRange(this.yRange_, this.forceYAxisZero_);
-  console.log('xAxisRange: ' + xAxisRange);
-  console.log('yAxisRange: ' + yAxisRange);
   var xAxisTick = calculateAxisTick(xAxisRange.range());
   var yAxisTick = calculateAxisTick(yAxisRange.range());
-  console.log('xAxisTick: ' + xAxisTick);
-  console.log('yAxisTick: ' + yAxisTick);
   this.axes_ = new Axes(xAxisRange, xAxisTick, yAxisRange, yAxisTick);
   this.axes_.setGridOn(this.gridOn_);
 };
