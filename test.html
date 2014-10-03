@@ -56,19 +56,21 @@
 
       function areObjectsEqual(a, b) {
         if (typeof a != typeof b) {
-          console.log('Types unequal: ' + typeof a + ', ' + typeof b);
-          return false;
+          throw new Error('Types unequal: ' + typeof a + ', ' + typeof b);
         }
         if (typeof a == 'object') {
           for (i in a) {
-            if (!areObjectsEqual(a[i], b[i])) {
-              //console.log('Unequal property ' + i);
-              return false;
+            try {
+              areObjectsEqual(a[i], b[i]);
+            } catch(e) {
+              throw new Error('Unequal property \'' + i + '\': {' + e.message + '}');
             }
           }
           return true;
         }
-        return a == b;
+        if (a != b) {
+          throw new Error('Unequal values ' + a + ' and ' + b);
+        }
       }
       function createTextSpan(text) {
         var span = document.createElement('span');
@@ -92,12 +94,14 @@
         var expected = eval('foo = ' + resultString);
         var div = createDiv('test pass');
         div.appendChild(createTextSpan(expressionString));
-        if (!areObjectsEqual(expected, actual)) {
+        try {
+          areObjectsEqual(expected, actual);
+          div.appendChild(createTextSpan(' : ' + resultString));
+        } catch (e) {
+          console.log(e.message);
           div.appendChild(createTextSpan(' : Expected ' + resultString));
           div.appendChild(createTextSpan(' : Actual ' + actual));
           div.className = 'test fail';
-        } else {
-          div.appendChild(createTextSpan(' : ' + resultString));
         }
         this.resultsDiv_.appendChild(div);
       }
