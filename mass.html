@@ -208,6 +208,9 @@
         startMassesGrams.forEach(function(startMass) {
           plot.plot([0, endDay], [startMass, startMass + endDay * 20], {lineColor: 'blue', lineStyle: '--'});
         });
+
+        var startMass = data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0);
+        plot.plot([0, endDay], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
       }
     </script>
   </head>
