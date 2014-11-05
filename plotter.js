@@ -84,13 +84,12 @@ function calculateAxisTick(axisRange) {
   }
   return interval * order;
 }
-// Exclusive wrt end points of input line, but inclusive wrt end points of
-// horizontal/vertical line.
+// Inclusive wrt end points of input line and of horizontal/vertical line.
 function intersectHorizontalLine(x1, y1, x2, y2, value, start, end) {
   if (y1 === y2) {
     return null;
   }
-  if ((value - y1) * (value - y2) >= 0) {
+  if ((value - y1) * (value - y2) > 0) {
     return null;
   }
   var xIntercept = x1 + (value - y1) * (x2 - x1) / (y2 - y1);
@@ -103,7 +102,7 @@ function intersectVerticalLine(x1, y1, x2, y2, value, start, end) {
   if (x1 === x2) {
     return null;
   }
-  if ((value - x1) * (value - x2) >= 0) {
+  if ((value - x1) * (value - x2) > 0) {
     return null;
   }
   var yIntercept = y1 + (value - x1) * (y2 - y1) / (x2 - x1);
@@ -180,6 +179,9 @@ Rect.prototype.yInterpolate = function(y) {
   return this.y_ + this.height_ * y;
 };
 Rect.prototype.contains = function(x, y) {
+  return x > this.x_ && x < this.xMax() && y > this.y_ && y < this.yMax();
+};
+Rect.prototype.containsOrOnEdge = function(x, y) {
   return x >= this.x_ && x <= this.xMax() && y >= this.y_ && y <= this.yMax();
 };
 Rect.prototype.clipLine = function(x1, y1, x2, y2) {
@@ -208,6 +210,9 @@ Rect.prototype.clipLine = function(x1, y1, x2, y2) {
   });
   if (points.length === 0) {
     return null;
+  }
+  if (points.length === 1) {
+    return [points[0], points[0]];
   }
   console.assert(points.length === 2, 'points.length = ' + points.length);
   return points;
@@ -400,7 +405,7 @@ Plot.prototype.redraw_ = function() {
     for (var j = 0; j < data.x.length; j++ ) {
       var xCoord = this.xCoord_(data.x[j]);
       var yCoord = this.yCoord_(data.y[j]);
-      if (!this.plotRect_.contains(xCoord, yCoord)) {
+      if (!this.plotRect_.containsOrOnEdge(xCoord, yCoord)) {
         continue;
       }
       var marker = data.markers[j % data.markers.length];
