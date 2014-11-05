@@ -263,7 +263,7 @@
 
         plot.plot(
             data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay }),
-            data.map(function(entry) { return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0) }),
+            data.map(function(entry) { return (entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0)) / 1000 }),
             {
               lineColor: 'red',
               markers: data.map(function(entry) { return (!entry.scale || entry.scale === kThreeBridges) ? '.' : 'o'; }),
@@ -271,14 +271,15 @@
             });
         plot.setGridOn(true);
 
-        var endDay = plot.getAxisRanges()[0].max();
-        var startMassesGrams = [3700, 3750, 3800];
+        var axisRanges = plot.getAxisRanges();
+        var endDay = axisRanges[0].max();
+        var startMassesGrams = [3.7, 3.75, 3.8];
         plot.setHoldOn(true);
         startMassesGrams.forEach(function(startMass) {
-          plot.plot([0, endDay], [startMass, startMass + endDay * 20], {lineColor: 'blue', lineStyle: '--'});
+          plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        var startMass = data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0);
+        var startMass = (data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0)) / 1000;
         plot.plot([0, endDay], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
       }
     </script>
