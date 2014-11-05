@@ -2,6 +2,8 @@
 <html>
   <head>
     <script type="text/javascript" src="plotter.js"></script>
+    <script type="text/javascript" src="who_mass_13weeks_boy.js"></script>
+    <script type="text/javascript" src="who_mass_5years_boy.js"></script>
     <script type="text/javascript">
       function daniel() {
         var kMillisecondsPerDay = 1000 * 60 * 60 * 24;
@@ -250,7 +252,7 @@
 
         var scaleColors = {};
         var kThreeBridges = 'Three Bridges';
-        var colors = ['blue', 'cyan', 'green', 'black'];
+        var colors = ['blue', 'cyan', 'green', 'black', 'grey'];
         data.forEach(function(entry) {
           if (entry.scale && entry.scale !== kThreeBridges && !scaleColors[entry.scale]) {
             scaleColors[entry.scale] = colors[Object.keys(scaleColors).length % colors.length];
@@ -258,7 +260,9 @@
         });
         scaleColors[kThreeBridges] = 'red';
 
-        var plot = new Plot(1000, 500);
+        plot = new Plot(1400, 700);
+        plot.setGridOn(true);
+        plot.setHoldOn(true);
         document.body.appendChild(plot.canvas());
 
         plot.plot(
@@ -269,18 +273,53 @@
               markers: data.map(function(entry) { return (!entry.scale || entry.scale === kThreeBridges) ? '.' : 'o'; }),
               markerColors: data.map(function(entry) { return scaleColors[entry.scale ? entry.scale : kThreeBridges]; })
             });
-        plot.setGridOn(true);
 
-        var axisRanges = plot.getAxisRanges();
-        var endDay = axisRanges[0].max();
+        var massDataRanges = plot.getAxisRanges();
+
+        var percentiles = [1, 3, 5, 10, 15, 25, 50, 75, 85, 90, 95, 97, 99];
+        var n = percentiles.length - 1;
+
+        for (var i in percentiles) {
+          var red = 255 * (n - i) / n;
+          var green = 255 * i / n;
+          plot.plot(
+              who_mass_13weeks_boy.map(function(entry) { return entry.week * 7; }),
+              who_mass_13weeks_boy.map(function(entry) { return entry['p' + percentiles[i]]; }),
+              {lineColor: '#' + toHex(red, 2) + toHex(green, 2) + '00', lineStyle: ':'});
+          var highResolutionLastWeek = who_mass_13weeks_boy[who_mass_13weeks_boy.length - 1].week;
+          var daysPerMonth = 365 / 12;
+          var lowResolutionFirstMonth = Math.ceil(highResolutionLastWeek * 7 / daysPerMonth);
+          plot.plot(
+              who_mass_5years_boy.map(function(entry, index, array) {
+                entry = index < lowResolutionFirstMonth ? array[lowResolutionFirstMonth] : entry;
+                return entry.month * 365 / 12;
+              }),
+              who_mass_5years_boy.map(function(entry, index, array) {
+                entry = index < lowResolutionFirstMonth ? array[lowResolutionFirstMonth] : entry;
+                return  entry['p' + percentiles[i]];
+              }),
+              {lineColor: '#' + toHex(red, 2) + toHex(green, 2) + '00', lineStyle: ':'});
+        }
+
+        var endDay = plot.getAxisRanges()[0].max();
+        var startMass = (data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0)) / 1000;
+        plot.plot([0, endDay], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
+
         var startMassesGrams = [3.7, 3.75, 3.8];
-        plot.setHoldOn(true);
         startMassesGrams.forEach(function(startMass) {
           plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        var startMass = (data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0)) / 1000;
-        plot.plot([0, endDay], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
+        massDataRanges[0].max_ = 140;
+        massDataRanges[1].max_ = 7.5;
+        plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
+      }
+
+      function toHex(x, width) {
+        var result = (Math.floor(x / 16) * 16).toString(16);
+        while (result.length < width)
+          result = '0' + result;
+        return result;
       }
     </script>
   </head>
