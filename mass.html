@@ -8,7 +8,7 @@
       function daniel() {
         var kMillisecondsPerDay = 1000 * 60 * 60 * 24;
         var kOuncesToGrams = 28.3495;
-        var kDisposableDiaperMassGrams = 20;
+        var kDisposableDiaperMassGrams = 22;
         var kReusableDiaperMassGrams = 80;
         var kDressMassGrams = 92;
         var kOnesieMassGrams = 78;
@@ -291,6 +291,10 @@
             timestamp: '2014/12/12 15:00',
             totalMassGrams: 5810,
             nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            timestamp: '2015/01/05 08:45',
+            totalMassGrams: 6330,
+            nonBabyMassGrams: kDisposableDiaperMassGrams + kOnesieMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
