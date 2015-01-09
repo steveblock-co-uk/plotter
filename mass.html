@@ -295,6 +295,11 @@
             timestamp: '2015/01/05 08:45',
             totalMassGrams: 6330,
             nonBabyMassGrams: kDisposableDiaperMassGrams + kOnesieMassGrams
+          }, {
+            scale: 'Doctor',
+            timestamp: '2015/01/08 16:00',
+            totalMassGrams: 6270,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
@@ -355,8 +360,8 @@
         var startMass = (data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0)) / 1000;
         plot.plot([0, endDay], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
 
-        var startMassesGrams = [3.7, 3.75, 3.8];
-        startMassesGrams.forEach(function(startMass) {
+        var startMassesKilos = [3.6, 3.7, 3.8];
+        startMassesKilos.forEach(function(startMass) {
           plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
