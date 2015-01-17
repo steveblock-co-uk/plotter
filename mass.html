@@ -300,6 +300,10 @@
             timestamp: '2015/01/08 16:00',
             totalMassGrams: 6270,
             nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            timestamp: '2015/01/16 15:00',
+            totalMassGrams: 6630,
+            nonBabyMassGrams: kReusableDiaperMassGrams + kOnesieMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
@@ -365,7 +369,7 @@
           plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        massDataRanges[0].max_ = 140;
+        massDataRanges[0].max_ = 180;
         massDataRanges[1].max_ = 7.5;
         plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
       }
