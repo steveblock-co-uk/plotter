@@ -2,17 +2,18 @@
 <html>
   <head>
     <script type="text/javascript" src="plotter.js"></script>
+    <script type="text/javascript" src="least_squares_logarithmic.js"></script>
     <script type="text/javascript" src="who_mass_13weeks_boy.js"></script>
     <script type="text/javascript" src="who_mass_5years_boy.js"></script>
     <script type="text/javascript">
       function daniel() {
-        var kMillisecondsPerDay = 1000 * 60 * 60 * 24;
-        var kOuncesToGrams = 28.3495;
-        var kDisposableDiaperMassGrams = 22;
-        var kReusableDiaperMassGrams = 80;
-        var kDressMassGrams = 92;
-        var kOnesieMassGrams = 78;
-        var data = [
+        kMillisecondsPerDay = 1000 * 60 * 60 * 24;
+        kOuncesToGrams = 28.3495;
+        kDisposableDiaperMassGrams = 22;
+        kReusableDiaperMassGrams = 80;
+        kDressMassGrams = 92;
+        kOnesieMassGrams = 78;
+        data = [
           {
             timestamp: '2014/08/27 21:00',
             scale: 'Hospital',
@@ -331,8 +332,8 @@
             nonBabyMassGrams: kReusableDiaperMassGrams + kOnesieMassGrams
           }
         ];
-        var startTimestamp = new Date(data[0].timestamp);
-        var startMass = data[0].totalMassGrams;
+        startTimestamp = new Date(data[0].timestamp);
+	startMass = data[0].totalMassGrams;
 
         var scaleColors = {};
         var kThreeBridges = 'Three Bridges';
@@ -394,9 +395,28 @@
           plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        massDataRanges[0].max_ = 200;
-        massDataRanges[1].max_ = 8.0;
+        massDataRanges[0].max_ = 300;
+        massDataRanges[1].max_ = 10;
         plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
+
+
+
+        x = data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay });
+        y = data.map(function(entry) { return (entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0)) / 1000 });
+        x = x.splice(2);
+        y = y.splice(2);
+        C = [10, 12, 15, 20, 30, 100];
+
+        x2 = [];
+        for (var i = 0; i < 1000; ++i) { x2[i] = i; }
+
+        for (var i = 0; i < C.length; ++i) {
+          y1 = y.map(function(ele) { return C[i] - ele; });
+          Z = leastSquaresExponential(x, y1);
+          y2 = exponential(x2, Z.A, Z.B, C[i]);
+          plot.plot(x2, y2, {lineStyle: ':'});
+        }
+        
       }
 
       function toHex(x, width) {
