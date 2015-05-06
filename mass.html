@@ -10,6 +10,7 @@
         var kOuncesToGrams = 28.3495;
         var kDisposableDiaperMassGrams = 22;
         var kReusableDiaperMassGrams = 80;
+        var kReusableDiaperLargeMassGrams = 76 + 28;
         var kDressMassGrams = 92;
         var kOnePieceSuitMassGrams = 78;
         var kOnesieMassGrams = 50;
@@ -354,6 +355,10 @@
             timestamp: '2015/04/10 13:00',
             totalMassGrams: 7985,
             nonBabyMassGrams: kReusableDiaperMassGrams + kOnePieceSuitMassGrams
+          }, {
+            timestamp: '2015/05/05 17:30',
+            totalMassGrams: 8150,
+            nonBabyMassGrams: kReusableDiaperLargeMassGrams + kOnesieMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
@@ -419,7 +424,7 @@
           plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        massDataRanges[0].max_ = 250;
+        massDataRanges[0].max_ = 300;
         massDataRanges[1].max_ = 9.0;
         plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
       }
