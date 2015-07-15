@@ -14,6 +14,7 @@
         var kDressMassGrams = 92;
         var kOnePieceSuitMassGrams = 78;
         var kOnesieMassGrams = 50;
+        var kShortsMassGrams = 48;
         var data = [
           {
             timestamp: '2014/08/27 21:00',
@@ -368,6 +369,10 @@
             timestamp: '2015/06/05 13:00',
             totalMassGrams: 8450,
             nonBabyMassGrams: kReusableDiaperLargeMassGrams
+          }, {
+            timestamp: '2015/07/14 16:45',
+            totalMassGrams: 8665,
+            nonBabyMassGrams: kDisposableDiaperMassGrams + kShortsMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
@@ -433,8 +438,6 @@
           plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        massDataRanges[0].max_ = 300;
-        massDataRanges[1].max_ = 9.0;
         plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
       }
 
