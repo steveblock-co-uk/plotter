@@ -7,7 +7,12 @@
     <script type="text/javascript">
       function daniel() {
         var kMillisecondsPerDay = 1000 * 60 * 60 * 24;
+        var kDaysPerMonth = 365.25 / 12;
+        var kMillisecondsPerMonth = kMillisecondsPerDay * kDaysPerMonth;
+        var kDaysPerWeek = 7;
+        var kWeeksPerMonth = kDaysPerMonth / kDaysPerWeek;
         var kOuncesToGrams = 28.3495;
+        var kExpectedMassGainPerDayKilos = 0.02;
         var kDisposableDiaperMassGrams = 22;
         var kReusableDiaperMassGrams = 80;
         var kReusableDiaperLargeMassGrams = 76 + 28;
@@ -398,7 +403,7 @@
         document.body.appendChild(plot.canvas());
 
         plot.plot(
-            data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay }),
+            data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerMonth }),
             data.map(function(entry) { return (entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0)) / 1000 }),
             {
               lineColor: 'red',
@@ -415,16 +420,15 @@
           var red = 255 * (n - i) / n;
           var green = 255 * i / n;
           plot.plot(
-              who_mass_13weeks_boy.map(function(entry) { return entry.week * 7; }),
+              who_mass_13weeks_boy.map(function(entry) { return entry.week / kWeeksPerMonth; }),
               who_mass_13weeks_boy.map(function(entry) { return entry['p' + percentiles[i]]; }),
               {lineColor: '#' + toHex(red, 2) + toHex(green, 2) + '00', lineStyle: ':'});
           var highResolutionLastWeek = who_mass_13weeks_boy[who_mass_13weeks_boy.length - 1].week;
-          var daysPerMonth = 365 / 12;
-          var lowResolutionFirstMonth = Math.ceil(highResolutionLastWeek * 7 / daysPerMonth);
+          var lowResolutionFirstMonth = Math.ceil(highResolutionLastWeek / kWeeksPerMonth);
           plot.plot(
               who_mass_5years_boy.map(function(entry, index, array) {
                 entry = index < lowResolutionFirstMonth ? array[lowResolutionFirstMonth] : entry;
-                return entry.month * 365 / 12;
+                return entry.month;
               }),
               who_mass_5years_boy.map(function(entry, index, array) {
                 entry = index < lowResolutionFirstMonth ? array[lowResolutionFirstMonth] : entry;
@@ -433,13 +437,13 @@
               {lineColor: '#' + toHex(red, 2) + toHex(green, 2) + '00', lineStyle: ':'});
         }
 
-        var endDay = plot.getAxisRanges()[0].max();
+        var endTime = plot.getAxisRanges()[0].max();
         var startMass = (data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0)) / 1000;
-        plot.plot([0, endDay], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
+        plot.plot([0, endTime], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
 
         var startMassesKilos = [3.6, 3.7, 3.8];
         startMassesKilos.forEach(function(startMass) {
-          plot.plot([0, endDay], [startMass, startMass + endDay * 0.02], {lineColor: 'blue', lineStyle: '--'});
+          plot.plot([0, endTime], [startMass, startMass + endTime * kDaysPerMonth * kExpectedMassGainPerDayKilos], {lineColor: 'blue', lineStyle: '--'});
         });
 
         plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
