@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="plotter.js"></script>
+    <script type="text/javascript">
+      function workouts() {
+        // Global for use from inspector
+        plot = new Plot(500, 500);
+        document.body.appendChild(plot.canvas());
+
+        //plot.plot([5, 11], [1, 4], 'red', '.');
+        //plot.setHoldOn(true);
+        //plot.plot([3.2, 5, 9.9], [-1, 200, 201], 'blue', 'o');
+        //plot.setHoldOn(true);
+
+        // Workout data: day vs joules
+        plot.plot([1, 2, 3, 4, 5, 6, 7], [2100, 2200, 2300, 2480, 2535, 2610, 2735], 'green', '.');
+        plot.forceAxisZero(false, true);
+        plot.setGridOn(true);
+
+        //plot.forceAxisZero(false, true);
+        //plot.setAxisRanges(new Range(0, 10), new Range(1500, 4000));
+
+        //plot.setHoldOn(true);
+        //plot.plot([1, 2, 3, 4, 5], [3100, 3200, 3300, 3480, 3535], 'cyan', 'o');
+        //plot.setAxisRanges();
+
+        //plot.plot([-0.001, 4.2], [-110, -89]);
+      }
+    </script>
+    <style type="text/css">
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body onload="workouts();">
+  <body>
+</html>

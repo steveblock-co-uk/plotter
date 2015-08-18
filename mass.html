@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="plotter.js"></script>
+    <script type="text/javascript">
+      function daniel() {
+        var kMillisecondsPerDay = 1000 * 60 * 60 * 24;
+        var kOuncesToGrams = 28.3495;
+        var kDisposableDiaperMassGrams = 20;
+        var kReusableDiaperMassGrams = 2.5 * kOuncesToGrams;
+        var kDressMassGrams = 92;
+        var data = [
+          {
+            timestamp: '2014/08/27 21:00',
+            totalMassGrams: 4105
+          }, {
+            timestamp: '2014/08/29 11:00',
+            totalMassGrams: 3815
+          }, {
+            timestamp: '2014/08/29 18:00',
+            totalMassGrams: 3790
+          }, {
+            timestamp: '2014/08/31 13:00',
+            totalMassGrams: 3886 // Dubious!
+          }, {
+            timestamp: '2014/09/01 02:00',
+            totalMassGrams: 3820
+          }, {
+            timestamp: '2014/09/02 16:00',
+            totalMassGrams: 3880,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/04 11:48',
+            totalMassGrams: 3910,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/05 15:30',
+            totalMassGrams: 141.5 * kOuncesToGrams, // 8lbs 13.5oz,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/06 14:30',
+            totalMassGrams: 142.1 * kOuncesToGrams, // 8lbs 14.1oz,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/08 11:40',
+            totalMassGrams: 3970,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/08 11:50',
+            totalMassGrams: 4080,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/08 12:00',
+            totalMassGrams: 3990,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/08 13:40',
+            totalMassGrams: 143.9 * kOuncesToGrams, // 8lbs 15.9oz,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/08 13:50',
+            totalMassGrams: 142.9 * kOuncesToGrams, // 8lbs 14.9oz,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/09 14:30',
+            totalMassGrams: 142.9 * kOuncesToGrams, // 8lbs 14.9oz,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/10 16:00',
+            totalMassGrams: 145 * kOuncesToGrams, // 9lbs 1oz,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/11 16:00',
+            totalMassGrams: 4114,
+            nonBabyMassGrams: kReusableDiaperMassGrams
+          }, {
+            timestamp: '2014/09/12 13:30',
+            totalMassGrams: 4050
+          }, {
+            timestamp: '2014/09/12 16:15',
+            totalMassGrams: 4160,
+            nonBabyMassGrams: kDisposableDiaperMassGrams + kDressMassGrams
+          }, {
+            timestamp: '2014/09/13 16:10',
+            totalMassGrams: 4226,
+            nonBabyMassGrams: kReusableDiaperMassGrams + kDressMassGrams
+          }, {
+            timestamp: '2014/09/15 12:20',
+            totalMassGrams: 4308,
+            nonBabyMassGrams: kReusableDiaperMassGrams + kDressMassGrams
+          }, {
+            timestamp: '2014/09/15 12:30',
+            totalMassGrams: 4290,
+            nonBabyMassGrams: kReusableDiaperMassGrams + kDressMassGrams
+          }
+        ];
+        var startTimestamp = new Date(data[0].timestamp);
+        var startMass = data[0].totalMassGrams;
+
+        var plot = new Plot(1000, 500);
+        document.body.appendChild(plot.canvas());
+
+        plot.plot(
+            data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerDay }),
+            //data.map(function(entry) { return 100 * (entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0)) / startMass }),
+            data.map(function(entry) { return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0) }),
+            'red',
+            '.');
+        plot.setGridOn(true);
+
+        var endDay = Math.ceil((new Date(data[data.length - 1].timestamp) - startTimestamp) / kMillisecondsPerDay);
+endDay = 20;
+        var startMassesGrams = [3700, 3750, 3800];
+        plot.setHoldOn(true);
+        startMassesGrams.forEach(function(startMass) {
+          plot.plot([0, endDay], [startMass, startMass + endDay * 20], 'blue');
+        });
+      }
+    </script>
+  </head>
+  <body onload="daniel();">
+  <body>
+</html>
