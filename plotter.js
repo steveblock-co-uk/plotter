@@ -300,7 +300,6 @@ function Plot(width, height) {
   this.xAxisRangeForced_ = false;
   this.yAxisRangeForced_ = false;
   this.holdOn_ = false;
-  this.gridOn_ = false;
   this.axes_ = new Axes();
   this.clearData_();
   this.createCanvas_();
@@ -313,11 +312,12 @@ Plot.prototype.canvas = function() {
 Plot.prototype.setHoldOn = function(holdOn) {
   this.holdOn_ = holdOn;
 };
+Plot.prototype.setAxisLabels = function(xAxisLabel, yAxisLabel) {
+  this.axes_.setLabels(xAxisLabel, yAxisLabel);
+  this.redraw_();
+};
 Plot.prototype.setGridOn = function(gridOn) {
-  this.gridOn_ = gridOn;
-  if (this.axes_) {
-    this.axes_.setGridOn(this.gridOn_);
-  }
+  this.axes_.setGridOn(gridOn);
   this.redraw_();
 };
 Plot.prototype.clearData_ = function() {
@@ -454,7 +454,6 @@ Plot.prototype.setXAxisRange_ = function(range) {
   var effectiveRange = range ? range : calculateAxisRange(this.xRange_, this.forceXAxisZero_);
   var tick = calculateAxisTick(effectiveRange.range());
   this.axes_.setXValues(effectiveRange, tick);
-  this.axes_.setGridOn(this.gridOn_);
 };
 Plot.prototype.setYAxisRange_ = function(range) {
   // This will be called again when some data is added in plot().
@@ -464,7 +463,6 @@ Plot.prototype.setYAxisRange_ = function(range) {
   var effectiveRange = range ? range : calculateAxisRange(this.yRange_, this.forceYAxisZero_);
   var tick = calculateAxisTick(effectiveRange.range());
   this.axes_.setYValues(effectiveRange, tick);
-  this.axes_.setGridOn(this.gridOn_);
 };
 // Clips to plot rect.
 Plot.prototype.drawLine_ = function(x1Coord, y1Coord, x2Coord, y2Coord) {
