@@ -225,6 +225,8 @@ Rect.prototype.toString = function() {
 /////////////////////////////////////////////////////////////////////////
 function Axes() {
   this.gridOn_ = false;
+  this.xLabel_ = '';
+  this.yLabel_ = '';
 }
 Axes.prototype.setXValues = function(range, tick) {
   this.xRange_ = range;
@@ -249,12 +251,24 @@ Axes.prototype.yTick = function() {
 Axes.prototype.setGridOn = function(gridOn) {
   this.gridOn_ = gridOn;
 };
+// Only sets if label is not null or undefined
+Axes.prototype.setLabels = function(xLabel, yLabel) {
+  if (xLabel != null)
+    this.xLabel_ = xLabel;
+  if (yLabel != null)
+    this.yLabel_ = yLabel;
+};
+Axes.prototype.labels = function() {
+  return [this.xLabel_, this.yLabel_];
+};
 // TODO: Allow force of equal scales?
 Axes.prototype.draw = function(context, rect) {
   context.strokeStyle = 'black';
   context.strokeRect(rect.x(), rect.y(), rect.width(), rect.height());
   var tickLength = 5;
+  var fontHeight = 8;
 
+  context.textAlign = "center";
   var xDecimalPlaces = calculateDecimalPlaces(this.xTick_);
   var xTickFirst = roundToMultiple(this.xRange_.min(), this.xTick_, true);
   for (var x = xTickFirst; x <= this.xRange_.max(); x += this.xTick_) {
@@ -262,7 +276,7 @@ Axes.prototype.draw = function(context, rect) {
     var xCoord = rect.xInterpolate(this.xRange_.fraction(x));
     context.moveTo(xCoord, rect.yMax() + tickLength); 
     context.lineTo(xCoord, rect.yMax());
-    context.fillText(x.toFixed(xDecimalPlaces), xCoord, rect.yMax() + 3 * tickLength);
+    context.fillText(x.toFixed(xDecimalPlaces), xCoord, rect.yMax() + 2 * tickLength + fontHeight);
     context.stroke();
     if (this.gridOn_) {
       context.setLineDash([1, 1]);
@@ -272,6 +286,12 @@ Axes.prototype.draw = function(context, rect) {
       context.setLineDash([]);
     }
   }
+  if (this.xLabel_ !== '') {
+    context.fillText(this.xLabel_, rect.x() + rect.width() / 2, rect.yMax() + 3 * tickLength + 2 * fontHeight);
+  }
+
+  context.textAlign = "end";
+  var maxTextWidth = 0;
   var yDecimalPlaces = calculateDecimalPlaces(this.yTick_);
   var yTickFirst = roundToMultiple(this.yRange_.min(), this.yTick_, true);
   for (var y = yTickFirst; y <= this.yRange_.max(); y += this.yTick_) {
@@ -279,7 +299,9 @@ Axes.prototype.draw = function(context, rect) {
     var yCoord = rect.yInterpolate(1 - this.yRange_.fraction(y));
     context.moveTo(rect.x() - tickLength, yCoord); 
     context.lineTo(rect.x(), yCoord);
-    context.fillText(y.toFixed(yDecimalPlaces), rect.x() - 5 * tickLength, yCoord);
+    var text = y.toFixed(yDecimalPlaces);
+    maxTextWidth = Math.max(maxTextWidth, context.measureText(text).width);
+    context.fillText(text, rect.x() - 2 * tickLength, yCoord + fontHeight / 2);
     context.stroke();
     if (this.gridOn_) {
       context.setLineDash([1, 1]);
@@ -288,6 +310,10 @@ Axes.prototype.draw = function(context, rect) {
       context.stroke();
       context.setLineDash([]);
     }
+  }
+  if (this.yLabel_ !== '') {
+    // TODO: Orient this vertically.
+    context.fillText(this.yLabel_, rect.x() - 5 * tickLength - maxTextWidth, rect.y() + rect.height() / 2 + fontHeight / 2);
   }
 };
 
