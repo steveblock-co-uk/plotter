@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="../plotter.js"></script>
+    <script type="text/javascript" src="1989.js"></script>
+    <script type="text/javascript" src="1990.js"></script>
+    <script type="text/javascript" src="1991.js"></script>
+    <script type="text/javascript" src="1992.js"></script>
+    <script type="text/javascript" src="1993.js"></script>
+    <script type="text/javascript" src="1994.js"></script>
+    <script type="text/javascript" src="1995.js"></script>
+    <script type="text/javascript" src="1996.js"></script>
+    <script type="text/javascript" src="1997.js"></script>
+    <script type="text/javascript" src="1998.js"></script>
+    <script type="text/javascript" src="1999.js"></script>
+    <script type="text/javascript" src="2000.js"></script>
+    <script type="text/javascript" src="2001.js"></script>
+    <script type="text/javascript" src="2002.js"></script>
+    <script type="text/javascript" src="2003.js"></script>
+    <script type="text/javascript" src="2004.js"></script>
+    <script type="text/javascript" src="2005.js"></script>
+    <script type="text/javascript" src="2006.js"></script>
+    <script type="text/javascript" src="2007.js"></script>
+    <script type="text/javascript" src="2008.js"></script>
+    <script type="text/javascript" src="2009.js"></script>
+    <script type="text/javascript" src="2010.js"></script>
+    <script type="text/javascript" src="2011.js"></script>
+    <script type="text/javascript" src="2012.js"></script>
+    <script type="text/javascript" src="2013.js"></script>
+    <script type="text/javascript" src="2014.js"></script>
+    <script type="text/javascript" src="2015.js"></script>
+    <script type="text/javascript">
+      function kk() {
+
+        function interpolate(x, y, fraction) {
+          return x * (1 - fraction) + y * fraction;
+        }
+
+        function getPercentile(data, percentile) {
+          var index = percentile / 100 * (data.length - 1);
+          console.assert(index >= 0 && index <= data.length - 1);
+          if (index === data.length - 1) {
+            return data[data.length - 1];
+          }
+          var lowerIndex = Math.floor(index);
+          var fraction = index % 1;
+          return interpolate(data[lowerIndex], data[lowerIndex + 1], fraction);
+        }
+
+        function getYearAd(date, utcOffsetHours) {
+          return 1970 + (date.getTime() / (1000 * 60 * 60) - utcOffsetHours) / (24 * 365.25);
+        }
+
+        function addPlot() {
+          var plot = new Plot(1400, 700);
+          plot.setGridOn(true);
+          plot.setHoldOn(true);
+          document.body.appendChild(plot.canvas());
+          return plot;
+        }
+
+        var rawData = [];
+        rawData.push(data1989);
+        rawData.push(data1990);
+        rawData.push(data1991);
+        rawData.push(data1992);
+        rawData.push(data1993);
+        rawData.push(data1994);
+        rawData.push(data1995);
+        rawData.push(data1996);
+        rawData.push(data1997);
+        rawData.push(data1998);
+        rawData.push(data1999);
+        rawData.push(data2000);
+        rawData.push(data2001);
+        rawData.push(data2002);
+        rawData.push(data2003);
+        rawData.push(data2004);
+        rawData.push(data2005);
+        rawData.push(data2006);
+        rawData.push(data2007);
+        rawData.push(data2008);
+        rawData.push(data2009);
+        rawData.push(data2010);
+        rawData.push(data2011);
+        rawData.push(data2012);
+        rawData.push(data2013);
+        rawData.push(data2014);
+        rawData.push(data2015);
+
+        var data = rawData.map(function(year) {
+          return {
+            date: new Date(year.date),
+            temperature: year.temperature,
+            times: year.times.map(function(time) {
+              return new Date("1970-01-01 " + time + " UTC").getTime();
+            })
+          };
+        });
+        data = data.filter(function(year) {
+          return year.times.length > 10;
+        });
+
+        var minPercentile = 25;
+        var maxPercentile = 75;
+        var stepPercentile = 25;
+        var percentiles = [];
+        for (var percentile = minPercentile; percentile < maxPercentile; percentile += stepPercentile) {
+          percentiles.push(percentile);
+        }
+        percentiles.push(maxPercentile);
+
+        var timesByDate = data.slice();
+        timesByDate.sort(function(x, y) {
+          return x.date < y.date ? -1 : 1;
+        });
+
+        var timesByTemperature = data.slice();
+        timesByTemperature.sort(function(x, y) {
+          return x.temperature < y.temperature ? -1 : 1;
+        });
+
+        var datePlot = addPlot();
+        datePlot.setAxisLabels('Year', 'Time (hours)');
+        for (var i = 0; i < percentiles.length; ++i) {
+          datePlot.plot(
+              timesByDate.map(function(year) { return getYearAd(year.date, -7); }),
+              timesByDate.map(function(year) { return getPercentile(year.times, percentiles[i]) / (1000 * 60 * 60); }),
+              { markers: '.'});
+        }
+ 
+        var temperaturePlot = addPlot();
+        temperaturePlot.setAxisLabels('Temperature (degrees Celcius)', 'Time (hours)');
+        for (var i = 0; i < percentiles.length; ++i) {
+          temperaturePlot.plot(
+              timesByTemperature.map(function(year) { return year.temperature; }),
+              timesByTemperature.map(function(year) { return getPercentile(year.times, percentiles[i]) / (1000 * 60 * 60); }),
+              { markers: '.'});
+        }
+      }
+    </script>
+  </head>
+  <body onload="kk();">
+  <body>
+</html>
