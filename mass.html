@@ -390,6 +390,15 @@
             timestamp: '2015/11/13 11:30',
             totalMassGrams: 9800,
             nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            scale: 'Doctor',
+            timestamp: '2016/01/12 10:50',
+            totalMassGrams: 9980,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          }, {
+            timestamp: '2016/01/16 10:30',
+            totalMassGrams: 10015,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
@@ -454,7 +463,7 @@
           plot.plot([0, endTime], [startMass, startMass + endTime * kDaysPerMonth * kExpectedMassGainPerDayKilos], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        plot.setAxisRanges(massDataRanges[0], massDataRanges[1]);
+        plot.setAxisRanges(massDataRanges[0], new Range(3, 11));
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
       }
 
