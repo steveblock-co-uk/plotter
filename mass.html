@@ -20,6 +20,7 @@
         var kOnePieceSuitMassGrams = 78;
         var kOnesieMassGrams = 50;
         var kShortsMassGrams = 48;
+        var kShirtMassGrams = 75;
         var data = [
           {
             timestamp: '2014/08/27 21:00',
@@ -404,6 +405,11 @@
             timestamp: '2016/03/05 09:30',
             totalMassGrams: 10730,
             nonBabyMassGrams: kDisposableDiaperMassGrams + kOnesieMassGrams + kShortsMassGrams
+          }, {
+            scale: 'North Van Doctor',
+            timestamp: '2016/11/10 09:45',
+            totalMassGrams: 13300,
+            nonBabyMassGrams: kDisposableDiaperMassGrams + kShirtMassGrams
           }
         ];
         var startTimestamp = new Date(data[0].timestamp);
@@ -468,7 +474,7 @@
           plot.plot([0, endTime], [startMass, startMass + endTime * kDaysPerMonth * kExpectedMassGainPerDayKilos], {lineColor: 'blue', lineStyle: '--'});
         });
 
-        plot.setAxisRanges(massDataRanges[0], new Range(3, 11));
+        plot.setAxisRanges(massDataRanges[0], new Range(3, 14));
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
       }
 
