@@ -4,11 +4,22 @@ function virtualMethod() {
   throw 'Implement me!';
 }
 
+function isVector(x) {
+  return x instanceof Vector;
+}
+
 function isNumber(x) {
   return typeof x === 'number';
 }
 
+function isBoolean(x) {
+  return typeof x === 'boolean';
+}
+
 function solveQuadratic(a, b, c) {
+  console.assert(isNumber(a));
+  console.assert(isNumber(b));
+  console.assert(isNumber(c));
   var x = b * b - 4 * a * c;
   if (x < 0)
     return [];
@@ -16,6 +27,39 @@ function solveQuadratic(a, b, c) {
     return [-b / (2 * a)];
   var root = Math.sqrt(x);
   return [(-b + root) / (2 * a), (-b - root) / (2 * a)];
+}
+
+// Unused ???
+function calculateTriangleAngle(a, b, c) {
+  console.assert(isNumber(a));
+  console.assert(isNumber(b));
+  console.assert(isNumber(c));
+  // a2 = b2 + c2 - 2bc cos A
+  return Math.acos((b * b + c * c - a * a) / (2 * b * c));
+}
+
+function getParameter(start, end, x) {
+  console.assert(isNumber(start));
+  console.assert(isNumber(end));
+  console.assert(isNumber(x));
+  return (x - start) / (end - start);
+}
+
+function toPlusMinusTwoPi(x) {
+}
+
+function toZeroTwoPi(x) {
+  var y = x % (2 * Math.PI);
+  return y > 0 ? y : y + 2 * Math.PI;
+}
+
+function toZeroMinusTwoPi(x) {
+  return toZeroTwoPi(x) - 2 * Math.PI;
+}
+
+function toPlusMinusPi(x) {
+  var y = toZeroTwoPi(x);
+  return y < Math.PI ? y : y - 2 * Math.PI;
 }
 
 
@@ -28,70 +72,121 @@ function Vector(x, y) {
 
 Vector.prototype.toString = function() {
   return "(" + this.x_ + ", " + this.y_ + ")";
-}
+};
 
 Vector.prototype.getX = function() {
   return this.x_;
-}
+};
 
 Vector.prototype.getY = function() {
   return this.y_;
-}
+};
 
 Vector.prototype.add = function(other) {
-  console.assert(other instanceof Vector);
+  console.assert(isVector(other));
   return new Vector(this.x_ + other.x_, this.y_ + other.y_);
-}
+};
 
 Vector.prototype.subtract = function(other) {
-  console.assert(other instanceof Vector);
+  console.assert(isVector(other));
   return new Vector(this.x_ - other.x_, this.y_ - other.y_);
-}
+};
 
 Vector.prototype.multiply = function(m) {
   console.assert(isNumber(m));
   return new Vector(m * this.x_, m * this.y_);
-}
+};
 
 Vector.prototype.magnitude = function() {
   return Math.sqrt(this.x_ * this.x_ + this.y_ * this.y_);
-}
+};
+
+// Radians anti-clockwise from +ve x axis
+// Unused ???
+Vector.prototype.angle = function() {
+  return Math.atan2(this.y_, this.x_);
+};
+
+Vector.prototype.unit = function() {
+  return this.multiply(1 / this.magnitude());
+};
+
+// Gets unit normal that is rotated +90 degrees from normal.
+Vector.prototype.unitNormal = function() {
+  var unit = this.unit();
+  return new Vector(-unit.getY(), unit.getX());
+};
+
+Vector.prototype.dot = function(v) {
+  console.assert(isVector(v));
+  return this.x_ * v.getX() + this.y_ * v.getY();
+};
+
+Vector.prototype.equals = function(v) {
+  console.assert(isVector(v));
+  return this.x_ === v.getX() && this.y_ === v.getY();
+};
 
 
 function Curve() {}
 
-Curve.prototype.getPointAt = virtualMethod;
+Curve.prototype.toString = virtualMethod;
+// Unused ???
+Curve.prototype.shift = virtualMethod;
+Curve.prototype.shiftOrthogonal = virtualMethod;
+Curve.prototype.getPointAtParameter = virtualMethod;
+Curve.prototype.getIntersectionsAtDistanceFromPoint = virtualMethod;
+Curve.prototype.getIntersectionsWithCurve = virtualMethod;
 
 
+// Directed
 function StraightLine(start, end) {
-  console.assert(start instanceof Vector);
-  console.assert(end instanceof Vector);
+  console.assert(isVector(start));
+  console.assert(isVector(end));
   this.start_ = start;
   this.end_ = end_;
-}
+};
 
 StraightLine.prototype = Curve.prototype;
 
 StraightLine.prototype.toString = function() {
   return "[" + this.start_.toString() + " -> " + this.end_.toString() + "]";
-}
+};
 
-StraightLine.prototype.getPointAt = function(t) {
+StraightLine.prototype.getPointAtParameter = function(t) {
   console.assert(isNumber(t));
-  return this.start_.multiply(1 - t).plus(this.end_.mutiply(t));
-}
+  return this.start_.multiply(1 - t).plus(this.end_.multiply(t));
+};
 
-StraightLine.prototype.shift(delta) {
+StraightLine.prototype.shift = function(delta) {
+  console.assert(isVector(delta));
   return new StraightLine(this.start_.plus(delta), this.end_.plus(delta));
-}
+};
 
-StraightLine.prototype.getMinimumDistanceFromPoint(point) {
-  console.assert(point instanceof Vector);
-}
+/*
+// Shifts towards point.
+StraightLine.prototype.shiftOrthogonal = function(distance, point) {
+  console.assert(isNumber(distance));
+  console.assert(isVector(point));
+  var unitNormal = this.unitNormal();
+  var orthogonalDistanceToPoint = point.subtract(this.start_).dot(unitNormal);
+  console.assert(orthogonalDistanceToPoint !== 0);
+  var delta = unitNormal.multiply(orthogonalDistanceToPoint > 0 ? distance : -distance);
+  return this.shift(delta);
+};
+*/
+
+// Positive distance is shift to left when viewed in direction of line.
+StraightLine.prototype.shiftOrthogonal = function(distance) {
+  console.assert(isNumber(distance));
+  var unitNormal = this.end_.subtract(this.start_).unitNormal();
+  var delta = unitNormal.multiply(distance);
+  return this.shift(delta);
+};
 
 // Returns an array of PointOnLine
-StraightLine.prototype.getIntersectionsAtDistanceFromPoint(point, d) {
-  console.assert(point instanceof Vector);
+StraightLine.prototype.getIntersectionsAtDistanceFromPoint = function(point, d) {
+  console.assert(isVector(point));
   console.assert(isNumber(d));
 
   var p = this.end_.getX() - this.start_.getX();
@@ -104,59 +199,135 @@ StraightLine.prototype.getIntersectionsAtDistanceFromPoint(point, d) {
   var c = q * q + s * s - d * d;
 
   var tValues = solveQuadratic(a, b, c);
-  return roots.map(function(t, this) {
+  return tValues.map(function(t, this) {
     return new PointOnLine(this, t);
   });
-}
+};
+
+// Returns an array of PointOnLine
+StraightLine.prototype.getIntersectionsWithCurve = function(Curve curve) {
+};
+
 
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
-function Arc(centre, radius, startTheta, endTheta) {
-  console.assert(centre instanceof Vector);
+function Arc(centre, radius, startTheta, endTheta, reverse) {
+  console.assert(isVector(centre));
   console.assert(isNumber(radius));
   console.assert(isNumber(startTheta));
   console.assert(isNumber(endTheta));
+  console.assert(isBoolean(reverse));
   this.centre_ = centre;
   this.radius_ = radius;
-  this.startTheta_ = startTheta_;
-  this.endTheta_ = endTheta_;
+  // To make interpolation work simply, we need to avoid wrap-around within the range of theta values. This also allows
+  // us to determine direction by comparing start and end theta.
+  this.startTheta_ = toPlusMinusPi(startTheta);
+  var deltaTheta = reverse ? toZeroMinusTwoPi(endTheta - startTheta) : toZeroTwoPi(endTheta - startTheta);
+  this.endTheta_ = this.startTheta_ + deltaTheta;
 }
+
 
 Arc.prototype = Curve.prototype;
 
-Arc.prototype.getPointAt = function(t) {
+Arc.prototype.toString = function() {
+  return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + " " + (this.reverse_ ? "forward" : "reverse") + "]";
+};
+
+Arc.prototype.getPointAtParameter = function(t) {
   console.assert(isNumber(t));
   var theta = this.startTheta_ * (1 - t) + this.endTheta_ * t;
   return this.centre_.add(new Vector(Math.cos(theta), Math.sin(theta)).multiply(this.radius_));
-}
+};
 
-Arc.prototype.toString = function() {
-  return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + "]";
-}
+Arc.prototype.shift = function(delta) {
+  console.assert(isVector(delta));
+  return new Arc(this.centre_.plus(delta), this.radius_, this.startTheta_, this.endTheta_);
+};
+
+/*
+// Shifts towards point.
+Arc.prototype.shiftOrthogonal = function(distance, point) {
+  var orthogonalDistanceToPoint = point.subtract(this.centre_).magnitude() - this.radius_;
+  console.assert(orthogonalDistanceToPoint !== 0);
+  return new Arc(this.centre_, orthogonalDistanceToPoint > 0 ? this.radius_ + distance : this.radius_ - distance);
+};
+*/
+
+// Positive distance is shift to left when viewed in direction of line.
+Arc.prototype.shiftOrthogonal = function(distance) {
+  console.assert(isNumber(distance));
+  var deltaRadius = this.endTheta_ > this.startTheta_ ? -distance : distance;
+  return new Arc(this.centre_, this.radius_ + deltaRadius);
+};
 
 // Returns an array of PointOnLine
-Arc.prototype.getIntersectionsAtDistanceFromPoint(point, d) {
-  console.assert(point instanceof Vector);
+Arc.prototype.getIntersectionsAtDistanceFromPoint = function(point, d) {
+  console.assert(isVector(point));
   console.assert(isNumber(d));
 
-  var x = this.centre_.subtract(d);
-  var magnitude = x.magnitude();
+  var centreToPoint = point.subtract(this.centre_);
+  var distanceBetweenCentres = centreToPoint.magnitude();
 
-  if (magnitude > d +
-  .multiply(0.5);
-  var y = new Vector(x.getY(), -x.getX());
-
-
-}
+  var overlap = this.radius_ + d - distanceBetweenCentres;
+  if (overlap < 0)
+    return [];
+  var thetaToPoint = centreToPoint.angle();
+  var thetas;
+  if (overlap === 0)
+    thetas = [thetaToPoint];
+  else {
+    var halfAngle = calculateTriangleAngle(d, distanceBetweenCentres, this.radius_);
+    thetas = [thetaToPoint - halfAngle, thetaToPoint + halfAngle];
+  }
+  return thetas.map(function(theta, this) {
+    return new PointOnLine(this, getParameter(this.startTheta_, this.endTheta_, theta));
+  });
+};
 
 
 function PointOnLine(line, t) {
-  console.assert(line instanceof Curve);
+  console.assert(isVector(line));
   console.assert(isNumber(t));
   this.line_ = line;
   this.t_ = t;
 }
 
-PointOnLine.prototype.asPoint = function() {
-  return this.line_.getPointAt(this.t_);
+PointOnLine.prototype.asVector = function() {
+  return this.line_.getPointAtParameter(this.t_);
+};
+
+
+// In general a PolyCurve consists of a set of joined curves. This constructor uses straight line segments.
+function PolyCurve(points) {
+  console.assert(isArray(points));
+  console.assert(points.length > 1);
+  this.curves_ = [];
+  for (var i = 1; i < points.length; ++i) {
+    this.curves_.push_back(new StraightLine(points[i - 1], points[i]));
+  }
 }
 
+// Positive distance is shift to left when viewed in direction of line.
+PolyCurve.prototype.shiftOrthogonal = function(distance) {
+  console.assert(isNumber(distance));
+  var shiftedCurves = this.curves_.map(function(curve) {
+    return curve.shiftOrthogonal(distance);
+  });
+  var fixedShiftedCurves = [ shiftedCurves[0] ];
+  for (var i = 1; i < this.curves_.length; ++i) {
+    // If the shifted curves do not meet, insert an arc with radius equal to the shift, so that it's tangent to adjacent
+    // straight lines.
+    // TODO: Trim lines that overlap!
+    var endOfPreviousCurve = shiftedCurves[i - 1].getPointAtParameter(1);
+    var startOfNextCurve = shiftedCurves[i].getPointAtParameter(0);
+    if (!endOfPreviousCurve.equals(startOfNextCurve)) {
+      var originalIntersection = this.curves_[i].getPointAtParameter(0);
+      console.assert(originalIntersection.equals(this.curves_[i - 1].getPointAtParameter(1)));
+      var previousShift = endOfPreviousCurve.subtract(originalIntersection);
+      var nextShift = endOfPreviousCurve.subtract(originalIntersection);
+      console.assert(previousShift.magnitude() === Math.abs(distance));
+      console.assert(nextShift.magnitude() === Math.abs(distance));
+      fixedShiftedCurves.push_back(new Arc(originalIntersection, Math.abs(distance), previousShift.angle(), nextShift.angle(), distance > 0));
+    }
+    fixedShiftedCurves.push_back(shiftedCurves[i]);
+  }
+};
