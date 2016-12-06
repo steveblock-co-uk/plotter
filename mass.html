@@ -21,7 +21,32 @@
         var kOnesieMassGrams = 50;
         var kShortsMassGrams = 48;
         var kShirtMassGrams = 75;
-        var data = [
+        var jasonData = [
+          {
+            timestamp: '2016/11/28 21:59',
+            scale: 'Hospital',
+            totalMassGrams: 3425,
+          },
+          {
+            timestamp: '2016/11/30 03:00',
+            scale: 'Hospital',
+            totalMassGrams: 3165,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          },
+          {
+            timestamp: '2016/12/02 09:30',
+            scale: 'Doctor',
+            totalMassGrams: 3220,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          },
+          {
+            timestamp: '2016/12/05 15:30',
+            scale: kWestVan,
+            totalMassGrams: 3381,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          }
+        ];
+        var danielData = [
           {
             timestamp: '2014/08/27 21:00',
             scale: 'Hospital',
@@ -412,18 +437,37 @@
             nonBabyMassGrams: kDisposableDiaperMassGrams + kShirtMassGrams
           }
         ];
-        var startTimestamp = new Date(data[0].timestamp);
-        var startMass = data[0].totalMassGrams;
+        var danielStartDate = date(danielData[0]);
+        var jasonStartDate = date(jasonData[0]);
+
+        var kDanielColor = 'blue';
+        var kJasonColor = 'purple';
+
+        function netMassGrams(entry) {
+          return entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0);
+        }
+
+        function scaleWithDefault(entry) {
+          return entry.scale ? entry.scale : kThreeBridges;
+        }
+
+        function date(entry) {
+          return new Date(entry.timestamp);
+        }
 
         var scaleColors = {};
         var kThreeBridges = 'Three Bridges';
+        var kWestVan = 'West Van';
         var colors = ['blue', 'cyan', 'green', 'black', 'grey'];
-        data.forEach(function(entry) {
+        function buildScaleColors(entry) {
           if (entry.scale && entry.scale !== kThreeBridges && !scaleColors[entry.scale]) {
             scaleColors[entry.scale] = colors[Object.keys(scaleColors).length % colors.length];
           }
-        });
-        scaleColors[kThreeBridges] = 'red';
+        }
+        danielData.forEach(buildScaleColors);
+        jasonData.forEach(buildScaleColors);
+        scaleColors[kThreeBridges] = kDanielColor;
+        scaleColors[kWestVan] = kJasonColor;
 
         plot = new Plot(1400, 700);
         plot.setGridOn(true);
@@ -431,12 +475,21 @@
         document.body.appendChild(plot.canvas());
 
         plot.plot(
-            data.map(function(entry) { return (new Date(entry.timestamp) - startTimestamp) / kMillisecondsPerMonth }),
-            data.map(function(entry) { return (entry.totalMassGrams - (entry.nonBabyMassGrams ? entry.nonBabyMassGrams : 0)) / 1000 }),
+            danielData.map(function(entry) { return (date(entry) - danielStartDate) / kMillisecondsPerMonth }),
+            danielData.map(function(entry) { return netMassGrams(entry) / 1000 }),
             {
-              lineColor: 'red',
-              markers: data.map(function(entry) { return (!entry.scale || entry.scale === kThreeBridges) ? '.' : 'o'; }),
-              markerColors: data.map(function(entry) { return scaleColors[entry.scale ? entry.scale : kThreeBridges]; })
+              lineColor: kDanielColor,
+              markers: danielData.map(function(entry) { return scaleWithDefault(entry) === kThreeBridges ? '.' : 'o'; }),
+              markerColors: danielData.map(function(entry) { return scaleColors[scaleWithDefault(entry)]; })
+            });
+
+        plot.plot(
+            jasonData.map(function(entry) { return (date(entry) - jasonStartDate) / kMillisecondsPerMonth }),
+            jasonData.map(function(entry) { return netMassGrams(entry) / 1000 }),
+            {
+              lineColor: kJasonColor,
+              markers: jasonData.map(function(entry) { return scaleWithDefault(entry) === kThreeBridges ? '.' : 'o'; }),
+              markerColors: jasonData.map(function(entry) { return scaleColors[scaleWithDefault(entry)]; })
             });
 
         var massDataRanges = plot.getAxisRanges();
@@ -466,16 +519,21 @@
         }
 
         var endTime = plot.getAxisRanges()[0].max();
-        var startMass = (data[0].totalMassGrams - (data[0].nonBabyMassGrams ? data[0].nonBabyMassGrams : 0)) / 1000;
-        plot.plot([0, endTime], [startMass, startMass], {lineColor: 'black', lineStyle: '--'});
 
-        var startMassesKilos = [3.6, 3.7, 3.8];
+        var danielStartMass = netMassGrams(danielData[0]) / 1000;
+        plot.plot([0, endTime], [danielStartMass, danielStartMass], {lineColor: kDanielColor, lineStyle: '--'});
+
+        var jasonStartMass = netMassGrams(jasonData[0]) / 1000;
+        plot.plot([0, endTime], [jasonStartMass, jasonStartMass], {lineColor: kJasonColor, lineStyle: '--'});
+
+        var startMassesKilos = [3.0, 3.2, 3.4, 3.6, 3.8, 4.0];
         startMassesKilos.forEach(function(startMass) {
-          plot.plot([0, endTime], [startMass, startMass + endTime * kDaysPerMonth * kExpectedMassGainPerDayKilos], {lineColor: 'blue', lineStyle: '--'});
+          plot.plot([0, endTime], [startMass, startMass + endTime * kDaysPerMonth * kExpectedMassGainPerDayKilos], {lineColor: 'black', lineStyle: '--'});
         });
 
         plot.setAxisRanges(massDataRanges[0], new Range(3, 14));
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
+        plot.setAxisRanges(new Range(0, 1), new Range(3, 4.4));
       }
 
       function toHex(x, width) {
