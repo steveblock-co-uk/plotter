@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="plotter.js"></script>
+    <script type="text/javascript">
+      function Bike(chainrings, sprockets, wheelDiameter) {
+        this.chainrings_ = chainrings;
+        this.sprockets_ = sprockets;
+        this.wheelDiameter_ = wheelDiameter;
+      }
+
+      Bike.prototype.gearLengths = function() {
+        return this.chainrings_.map(function(chainring) {
+          return this.sprockets_.map(function(sprocket) {
+            return chainring / sprocket * this.wheelDiameter_ * 2 * Math.PI;
+          }.bind(this));
+        }.bind(this));
+      };
+
+      function BikePlotter(plot, bike, offset, color) {
+        var gearLengths = bike.gearLengths();
+        var yData = [];
+        for (var i = 0; i < gearLengths.length; ++i) {
+          yData[i] = offset + i / (gearLengths.length - 1);
+        }
+        for (var i = 0; i < gearLengths.length; ++i) {
+          var y = gearLengths[i].map(function() { return yData[i]; });
+          plot.plot(gearLengths[i], y, {
+            lineColor: color,
+            markers: '.',
+          });
+        }
+      }
+
+      function go() {
+        var plot = new Plot(1400, 700);
+        plot.setGridOn(true);
+        plot.setHoldOn(true);
+        document.body.appendChild(plot.canvas());
+
+        var commuterBike = new Bike([28, 38, 48], [12, 14, 16, 18, 21, 24, 28, 32], 1);
+        var roadBike = new Bike([34, 50], [12, 13, 14, 15, 17, 19, 21, 24, 27], 1);
+        var crossBike = new Bike([36, 46], [11, 12, 14, 16, 18, 21, 24, 28, 32], 1);
+        var modCrossBike = new Bike([34, 46], [12, 14, 16, 18, 20, 23, 26, 30, 34], 1);
+
+        new BikePlotter(plot, commuterBike, 1, 'black');
+        new BikePlotter(plot, roadBike, 3, 'green');
+        new BikePlotter(plot, crossBike, 5, 'blue');
+        new BikePlotter(plot, modCrossBike, 7, 'red');
+
+        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 9));
+      }
+    </script>
+  </head>
+  <body onload="go();">
+  <body>
+</html>
