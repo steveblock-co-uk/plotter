@@ -62,6 +62,17 @@
             scale: kWestVan,
             totalMassGrams: 4106,
             nonBabyMassGrams: kDisposableDiaperMassGrams
+          },
+          {
+            timestamp: '2016/12/29 16:30',
+            scale: 'Doctor',
+            totalMassGrams: 4380,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
+          },
+          {
+            timestamp: '2016/12/29 21:00',
+            scale: 'Hospital',
+            totalMassGrams: 4345
           }
         ];
         var danielData = [
@@ -549,9 +560,8 @@
           plot.plot([0, endTime], [startMass, startMass + endTime * kDaysPerMonth * kExpectedMassGainPerDayKilos], {lineColor: 'black', lineStyle: '--'});
         });
 
-        plot.setAxisRanges(massDataRanges[0], new Range(3, 14));
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
-        plot.setAxisRanges(new Range(0, 1), new Range(3, 4.4));
+        plot.setAxisRanges(new Range(0, 1.4), new Range(3, 4.8));
       }
 
       function toHex(x, width) {
