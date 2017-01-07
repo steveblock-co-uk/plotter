@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="coordinateGeometry.js"></script>
+    <script type="text/javascript">
+      function test() {
+        var tester = new Tester(document.getElementById('testResults'));
+
+        // Angle ranges
+        tester.test('toZeroTwoPi(0)', '0');
+        tester.test('toZeroTwoPi(1)', '1');
+        tester.test('toZeroTwoPi(2 * Math.PI)', '0');
+        tester.test('toZeroTwoPi(-1)', '2 * Math.PI - 1');
+        tester.test('toZeroTwoPi(-2 * Math.PI)', '0');
+
+        tester.test('toZeroMinusTwoPi(0)', '0');
+        tester.test('toZeroMinusTwoPi(1)', '1 - 2 * Math.PI');
+        tester.test('toZeroMinusTwoPi(2 * Math.PI)', '0');
+        tester.test('toZeroMinusTwoPi(-1)', '-1');
+        tester.test('toZeroMinusTwoPi(-2 * Math.PI)', '0');
+
+        tester.test('toPlusMinusPi(0)', '0');
+        tester.test('toPlusMinusPi(1)', '1');
+        tester.test('toPlusMinusPi(2 * Math.PI)', '0');
+        tester.test('toPlusMinusPi(-1)', '-1');
+        tester.test('toPlusMinusPi(-2 * Math.PI)', '0');
+      }
+
+      function areObjectsEqual(a, b) {
+        if (typeof a != typeof b) {
+          throw new Error('Types unequal: ' + typeof a + ', ' + typeof b);
+        }
+        if (typeof a == 'object') {
+          for (i in a) {
+            try {
+              areObjectsEqual(a[i], b[i]);
+            } catch(e) {
+              throw new Error('Unequal property \'' + i + '\': {' + e.message + '}');
+            }
+          }
+          return true;
+        }
+        if (a != b) {
+          throw new Error('Unequal values ' + a + ' and ' + b);
+        }
+      }
+      function createTextSpan(text) {
+        var span = document.createElement('span');
+        span.innerText = text;
+        return span;
+      }
+      function createDiv(className) {
+        var div = document.createElement('div');
+        div.className = className;
+        return div;
+      }
+
+      function Tester(resultsDiv) {
+        this.resultsDiv_ = resultsDiv;
+        this.resultsDiv_.innerHTML = '';
+        this.resultsDiv_.appendChild(createTextSpan('Test results'));
+      }
+      Tester.prototype.test = function(expressionString, resultString) {
+        var actual = eval(expressionString);
+        // Need to make sure the eval has a return value?!
+        var expected = eval('foo = ' + resultString);
+        var div = createDiv('test pass');
+        div.appendChild(createTextSpan(expressionString));
+        try {
+          areObjectsEqual(expected, actual);
+          div.appendChild(createTextSpan(' : ' + resultString));
+        } catch (e) {
+          console.log(e.message);
+          div.appendChild(createTextSpan(' : Expected ' + resultString));
+          div.appendChild(createTextSpan(' : Actual ' + actual));
+          div.className = 'test fail';
+        }
+        this.resultsDiv_.appendChild(div);
+      }
+    </script>
+    <style type="text/css">
+      div.test {
+        margin: 1px;
+        border: 1px solid black;
+        font-size: small;
+      }
+      div.pass {
+        background-color: green;
+      }
+      div.fail {
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body onload="test();">
+    <pre id="testResults"></pre>
+  <body>
+</html>
