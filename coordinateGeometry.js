@@ -143,7 +143,12 @@ Vector.prototype.unitNormal = function() {
 
 Vector.prototype.dot = function(v) {
   console.assert(isVector(v));
-  return this.x_ * v.getX() + this.y_ * v.getY();
+  return this.x_ * v.x_ + this.y_ * v.y_;
+};
+
+Vector.prototype.cross = function(v) {
+  console.assert(isVector(v));
+  return this.x_ * v.y_ - this.y_ * v.x_;
 };
 
 Vector.prototype.equals = function(v) {
@@ -166,7 +171,6 @@ Curve.prototype.toString = virtualMethod;
 Curve.prototype.shift = virtualMethod;
 Curve.prototype.shiftOrthogonal = virtualMethod;
 Curve.prototype.getPointAtParameter = virtualMethod;
-Curve.prototype.getIntersectionsAtDistanceFromPoint = virtualMethod;
 Curve.prototype.getIntersectionsWithStraightLine = virtualMethod;
 Curve.prototype.getIntersectionsWithArc = virtualMethod;
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
@@ -218,9 +222,22 @@ StraightLine.prototype.shiftOrthogonal = function(distance) {
 };
 
 // Returns an array of PointOnLine
-StraightLine.prototype.getIntersectionsAtDistanceFromPoint = function(point, d) {
-  console.assert(isVector(point));
-  console.assert(isNumber(d));
+StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+  console.assert(isStraightLine(straightLine));
+  var s1 = this.start_;
+  var s2 = straightLine.start_;
+  var d1 = this.delta();
+  var d2 = straightLine.delta();
+  var t = (d2.getX() * (s1.getY() - s2.getY) - d2.getY() * (s1.getX() - s2.getX())) /
+      (d1.getX() * d2.getY() - d2.getX() * d1.getY());
+  return [new PointOnLine(this, t)];
+};
+
+// Returns an array of PointOnLine
+StraightLine.prototype.getIntersectionsWithArc = function(arc) {
+  console.assert(isArc(arc));
+  var point = arc.getCentre();
+  var d = arc.getRadius();
 
   var p = this.end_.getX() - this.start_.getX();
   var q = this.start_.getX() - point.getX();
@@ -237,23 +254,6 @@ StraightLine.prototype.getIntersectionsAtDistanceFromPoint = function(point, d) 
   }.bind(this));
 };
 
-// Returns an array of PointOnLine
-StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  console.assert(isStraightLine(straightLine));
-  var s1 = this.start_;
-  var s2 = straightLine.start_;
-  var d1 = this.delta();
-  var d2 = straightLine.delta();
-  return (d2.getX() * (s1.getY() - s2.getY) - d2.getY() * (s1.getX() - s2.getX())) /
-      (d1.getX() * d2.getY() - d2.getX() * d1.getY());
-};
-
-// Returns an array of PointOnLine
-StraightLine.prototype.getIntersectionsWithArc = function(arc) {
-  console.assert(isArc(arc));
-  // TODO
-};
-
 // Returns an array of Vector
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(x));
@@ -263,12 +263,16 @@ StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
 };
 
 StraightLine.prototype.delta = function() {
-  return this.end_.minus(this.start_);
+  return this.end_.subtract(this.start_);
 };
 
 // Angle from +vs x axis to end of line.
 StraightLine.prototype.angle = function() {
   return this.delta().angle();
+};
+
+StraightLine.prototype.length = function() {
+  return this.delta().magnitude();
 };
 
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
@@ -289,6 +293,14 @@ function Arc(centre, radius, startTheta, endTheta, reverse) {
 
 
 Arc.prototype = Curve.prototype;
+
+Arc.prototype.getCentre = function() {
+  return this.centre_;
+};
+
+Arc.prototype.getRadius = function() {
+  return this.radius_;
+};
 
 Arc.prototype.toString = function() {
   return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + " " + (this.reverse_ ? "forward" : "reverse") + "]";
@@ -322,9 +334,36 @@ Arc.prototype.shiftOrthogonal = function(distance) {
 };
 
 // Returns an array of PointOnLine
-Arc.prototype.getIntersectionsAtDistanceFromPoint = function(point, d) {
-  console.assert(isVector(point));
-  console.assert(isNumber(d));
+Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+  console.assert(isStraightLine(straightLine));
+  var normal = new StraightLine(this.centre_, this.centre_ + straightLine.unitNormal());
+  var intersection = straightLine.getIntersectionsWithCurve(normal)[0];
+  var centreToIntersection = intersection.subtract(this.centre_);
+  var distance = centreToIntersection.magnitude();
+  if (distance > this.radius_) {
+    return [];
+  }
+  var angle = centreToIntersection.angle();
+  var thetas;
+  if (distance === this.radius_) {
+    thetas = [angle];
+  } else {
+    var deltaAngle = Math.acos(distance / this.radius_);
+    thetas = [
+      angle + deltaAngle,
+      angle - deltaAngle,
+    ];
+  }
+  return thetas.map(function(theta) {
+    return new PointOnLine(this, getParameter(this.startTheta_, this.endTheta_, theta));
+  }.bind(this));
+};
+
+// Returns an array of PointOnLine
+Arc.prototype.getIntersectionsWithArc = function(arc) {
+  console.assert(isArc(arc));
+  var point = arc.getCentre();
+  var d = arc.getRadius();
 
   var centreToPoint = point.subtract(this.centre_);
   var distanceBetweenCentres = centreToPoint.magnitude();
@@ -343,18 +382,6 @@ Arc.prototype.getIntersectionsAtDistanceFromPoint = function(point, d) {
   return thetas.map(function(theta) {
     return new PointOnLine(this, getParameter(this.startTheta_, this.endTheta_, theta));
   }.bind(this));
-};
-
-// Returns an array of PointOnLine
-Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  console.assert(isStraightLine(straightLine));
-  // TODO
-};
-
-// Returns an array of PointOnLine
-Arc.prototype.getIntersectionsWithArc = function(arc) {
-  console.assert(isArc(arc));
-  // TODO
 };
 
 // Returns an array of Vector
