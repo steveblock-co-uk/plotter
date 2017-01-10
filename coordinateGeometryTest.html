@@ -6,24 +6,98 @@
       function test() {
         var tester = new Tester(document.getElementById('testResults'));
 
-        // Angle ranges
-        tester.test('toZeroTwoPi(0)', '0');
+        // solveQuadratic()
+        tester.test('solveQuadratic(1, 0, 0)', '[0]');
+        tester.test('solveQuadratic(1, 2, 0)', '[0, -2]');
+        tester.test('solveQuadratic(1, 2, -8)', '[2, -4]');
+        tester.test('solveQuadratic(1, 0, 1)', '[]');
+
+        // calculateTriangleAngle()
+        tester.test('calculateTriangleAngle(0, 1, 1)', '0');
+        tester.test('calculateTriangleAngle(Math.sqrt(2), 1, 1)', 'Math.PI / 2');
+        tester.test('calculateTriangleAngle(1, Math.sqrt(2), 1)', 'Math.PI / 4');
+        tester.test('calculateTriangleAngle(1, Math.sqrt(3), 2)', 'Math.PI / 6');
+
+        // getParameter()
+        tester.test('getParameter(0, 2, 0)', '0');
+        tester.test('getParameter(0, 2, 2)', '1');
+        tester.test('getParameter(0, 2, 4)', '2');
+        tester.test('getParameter(0, 2, -2)', '-1');
+
+        // interpolate()
+        tester.test('interpolate(0, 2, 0)', '0');
+        tester.test('interpolate(0, 2, 1)', '2');
+        tester.test('interpolate(0, 2, 2)', '4');
+        tester.test('interpolate(0, 2, -1)', '-2');
+
+        // toZeroTwoPi()
+        tester.test('toZeroTwoPi(0)', '2 * Math.PI');
+        tester.test('toZeroTwoPi(0)', '2 * Math.PI');
         tester.test('toZeroTwoPi(1)', '1');
-        tester.test('toZeroTwoPi(2 * Math.PI)', '0');
+        tester.test('toZeroTwoPi(2 * Math.PI)', '2 * Math.PI');
         tester.test('toZeroTwoPi(-1)', '2 * Math.PI - 1');
-        tester.test('toZeroTwoPi(-2 * Math.PI)', '0');
+        tester.test('toZeroTwoPi(-2 * Math.PI)', '2 * Math.PI');
 
-        tester.test('toZeroMinusTwoPi(0)', '0');
+        // toZeroMinusTwoPi()
+        tester.test('toZeroMinusTwoPi(0)', '-2 * Math.PI');
         tester.test('toZeroMinusTwoPi(1)', '1 - 2 * Math.PI');
-        tester.test('toZeroMinusTwoPi(2 * Math.PI)', '0');
+        tester.test('toZeroMinusTwoPi(2 * Math.PI)', '-2 * Math.PI');
         tester.test('toZeroMinusTwoPi(-1)', '-1');
-        tester.test('toZeroMinusTwoPi(-2 * Math.PI)', '0');
+        tester.test('toZeroMinusTwoPi(-2 * Math.PI)', '-2 * Math.PI');
 
-        tester.test('toPlusMinusPi(0)', '0');
-        tester.test('toPlusMinusPi(1)', '1');
-        tester.test('toPlusMinusPi(2 * Math.PI)', '0');
-        tester.test('toPlusMinusPi(-1)', '-1');
-        tester.test('toPlusMinusPi(-2 * Math.PI)', '0');
+        // toMinusPlusPi()
+        tester.test('toMinusPlusPi(0)', '0');
+        tester.test('toMinusPlusPi(1)', '1');
+        tester.test('toMinusPlusPi(2 * Math.PI)', '0');
+        tester.test('toMinusPlusPi(-1)', '-1');
+        tester.test('toMinusPlusPi(-2 * Math.PI)', '0');
+
+        // Vector.add()
+        tester.testEquals('new Vector(1, 2).add(new Vector(3, 4))', 'new Vector(4, 6)');
+        tester.testEquals('new Vector(1, 2).add(new Vector(-3, -4))', 'new Vector(-2, -2)');
+
+        // Vector.subtract()
+        tester.testEquals('new Vector(1, 2).subtract(new Vector(3, 4))', 'new Vector(-2, -2)');
+        tester.testEquals('new Vector(1, 2).subtract(new Vector(-3, -4))', 'new Vector(4, 6)');
+
+        // Vector.multiply()
+        tester.testEquals('new Vector(1, 2).multiply(2)', 'new Vector(2, 4)');
+        tester.testEquals('new Vector(1, 2).multiply(-2)', 'new Vector(-2, -4)');
+
+        // Vector.magnitude()
+        tester.test('new Vector(1 / Math.sqrt(2), 1 / Math.sqrt(2)).magnitude()', '1');
+        tester.test('new Vector(1, 2).magnitude()', 'Math.sqrt(5)');
+
+        // Vector.angle()
+        tester.test('new Vector(1, Math.sqrt(3)).angle()', 'Math.PI / 3');
+        tester.test('new Vector(1, -Math.sqrt(3)).angle()', '-Math.PI / 3');
+        tester.test('new Vector(-1, Math.sqrt(3)).angle()', '2 * Math.PI / 3');
+        tester.test('new Vector(-1, -Math.sqrt(3)).angle()', '- 2 * Math.PI / 3');
+
+        // Vector.unit()
+        tester.testApproxEquals('new Vector(1 / Math.sqrt(2), 1 / Math.sqrt(2)).unit()', 'new Vector(1 / Math.sqrt(2), 1 / Math.sqrt(2))');
+        tester.testApproxEquals('new Vector(1, 2).unit()', 'new Vector(1 / Math.sqrt(5), 2 / Math.sqrt(5))');
+
+        // Vector.unitNormal()
+        tester.testApproxEquals('new Vector(1 / Math.sqrt(2), 1 / Math.sqrt(2)).unitNormal()', 'new Vector(-1 / Math.sqrt(2), 1 / Math.sqrt(2))');
+        tester.testApproxEquals('new Vector(1, 2).unitNormal()', 'new Vector(-2 / Math.sqrt(5), 1 / Math.sqrt(5))');
+
+        // Vector.dot()
+        tester.test('new Vector(1, 2).dot(new Vector(1, 2))', '5');
+        tester.test('new Vector(1, 2).dot(new Vector(2, -1))', '0');
+
+        // Vector.cross()
+        tester.test('new Vector(1, 2).cross(new Vector(1, 2))', '0');
+        tester.test('new Vector(1, 2).cross(new Vector(-2, 1))', '5');
+        tester.test('new Vector(1, 2).cross(new Vector(2, -1))', '-5');
+
+        // Vector.rotate()
+        tester.testEquals('new Vector(1, 2).rotate(0)', 'new Vector(1, 2)');
+        tester.testApproxEquals('new Vector(1, 2).rotate(Math.PI / 2)', 'new Vector(-2, 1)');
+        tester.testApproxEquals('new Vector(1, 2).rotate(Math.PI)', 'new Vector(-1, -2)');
+        tester.testApproxEquals('new Vector(1, 2).rotate(3 * Math.PI / 2)', 'new Vector(2, -1)');
+        tester.testApproxEquals('new Vector(1, 2).rotate(2 * Math.PI)', 'new Vector(1, 2)');
+
       }
 
       function areObjectsEqual(a, b) {
@@ -31,16 +105,21 @@
           throw new Error('Types unequal: ' + typeof a + ', ' + typeof b);
         }
         if (typeof a == 'object') {
-          for (i in a) {
+          var properties = Object.getOwnPropertyNames(a);
+          properties.concat(Object.getOwnPropertyNames(b));
+          for (var i = 0; i < properties.length; ++i) {
+            var property = properties[i];
             try {
-              areObjectsEqual(a[i], b[i]);
+              areObjectsEqual(a[property], b[property]);
             } catch(e) {
               throw new Error('Unequal property \'' + i + '\': {' + e.message + '}');
             }
           }
-          return true;
-        }
-        if (a != b) {
+        } else if (typeof a == 'number') {
+          if (Math.abs(a - b) > 0.0000000001) {
+            throw new Error('Unequal values ' + a + ' and ' + b);
+          }
+        } else if (a != b) {
           throw new Error('Unequal values ' + a + ' and ' + b);
         }
       }
@@ -60,6 +139,12 @@
         this.resultsDiv_.innerHTML = '';
         this.resultsDiv_.appendChild(createTextSpan('Test results'));
       }
+      Tester.prototype.testEquals = function(a, b) {
+        this.test(a + '.equals(' + b + ')', 'true');
+      };
+      Tester.prototype.testApproxEquals = function(a, b) {
+        this.test(a + '.subtract(' + b + ').magnitude()', '0');
+      };
       Tester.prototype.test = function(expressionString, resultString) {
         var actual = eval(expressionString);
         // Need to make sure the eval has a return value?!

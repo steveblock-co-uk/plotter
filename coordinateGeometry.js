@@ -41,7 +41,6 @@ function solveQuadratic(a, b, c) {
   return [(-b + root) / (2 * a), (-b - root) / (2 * a)];
 }
 
-// Unused ???
 function calculateTriangleAngle(a, b, c) {
   console.assert(isNumber(a));
   console.assert(isNumber(b));
@@ -73,7 +72,7 @@ function toZeroTwoPi(x) {
 // Exclusive at zero, inclusive at minus two pi.
 function toZeroMinusTwoPi(x) {
   var y = toZeroTwoPi(x) - 2 * Math.PI;
-  return y === 2 * Math.PI ? 0 : y;
+  return y === 0 ? -2 * Math.PI : y;
 }
 
 // Inclusive at minus pi, exclusive at pi.
@@ -96,6 +95,11 @@ Vector.Y = new Vector(0, 1);
 
 Vector.prototype.toString = function() {
   return "(" + this.x_ + ", " + this.y_ + ")";
+};
+
+Vector.prototype.equals = function(v) {
+  console.assert(isVector(v));
+  return this.x_ === v.x_ && this.y_ === v.y_;
 };
 
 Vector.prototype.getX = function() {
@@ -134,7 +138,7 @@ Vector.prototype.unit = function() {
   return this.multiply(1 / this.magnitude());
 };
 
-// Gets unit normal that is rotated +90 degrees from normal.
+// Gets unit normal that is rotated +90 degrees.
 Vector.prototype.unitNormal = function() {
   var unit = this.unit();
   // Special-case rather than using rotate() to avoid rounding errors.
@@ -151,16 +155,11 @@ Vector.prototype.cross = function(v) {
   return this.x_ * v.y_ - this.y_ * v.x_;
 };
 
-Vector.prototype.equals = function(v) {
-  console.assert(isVector(v));
-  return this.x_ === v.getX() && this.y_ === v.getY();
-};
-
 Vector.prototype.rotate = function(theta) {
   console.assert(isNumber(theta));
   var cosTheta = Math.cos(theta);
   var sinTheta = Math.sin(theta);
- return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.y_ * sinTheta + this.x_ * cosTheta);
+ return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
 }
 
 
