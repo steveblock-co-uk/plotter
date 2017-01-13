@@ -79,6 +79,12 @@
             scale: kWestVan,
             totalMassGrams: 4612,
             nonBabyMassGrams: kDisposableDiaperMassGrams
+          },
+          {
+            timestamp: '2017/01/12 13:30',
+            scale: 'John Braithwaite',
+            totalMassGrams: 4910,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
           }
         ];
         var danielData = [
@@ -567,7 +573,7 @@
         });
 
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
-        plot.setAxisRanges(new Range(0, 1.4), new Range(3, 4.8));
+        plot.setAxisRanges(new Range(0, 2), new Range(3, 5));
       }
 
       function toHex(x, width) {
