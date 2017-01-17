@@ -52,17 +52,20 @@
         tester.test('toMinusPlusPi(-1)', '-1');
         tester.test('toMinusPlusPi(-2 * Math.PI)', '0');
 
+        // Vector.toString()
+        tester.test('new Vector(1, 2).toString()', '\'(1, 2)\'');
+
         // Vector.add()
-        tester.testEquals('new Vector(1, 2).add(new Vector(3, 4))', 'new Vector(4, 6)');
-        tester.testEquals('new Vector(1, 2).add(new Vector(-3, -4))', 'new Vector(-2, -2)');
+        tester.test('new Vector(1, 2).add(new Vector(3, 4))', 'new Vector(4, 6)');
+        tester.test('new Vector(1, 2).add(new Vector(-3, -4))', 'new Vector(-2, -2)');
 
         // Vector.subtract()
-        tester.testEquals('new Vector(1, 2).subtract(new Vector(3, 4))', 'new Vector(-2, -2)');
-        tester.testEquals('new Vector(1, 2).subtract(new Vector(-3, -4))', 'new Vector(4, 6)');
+        tester.test('new Vector(1, 2).subtract(new Vector(3, 4))', 'new Vector(-2, -2)');
+        tester.test('new Vector(1, 2).subtract(new Vector(-3, -4))', 'new Vector(4, 6)');
 
         // Vector.multiply()
-        tester.testEquals('new Vector(1, 2).multiply(2)', 'new Vector(2, 4)');
-        tester.testEquals('new Vector(1, 2).multiply(-2)', 'new Vector(-2, -4)');
+        tester.test('new Vector(1, 2).multiply(2)', 'new Vector(2, 4)');
+        tester.test('new Vector(1, 2).multiply(-2)', 'new Vector(-2, -4)');
 
         // Vector.magnitude()
         tester.test('new Vector(1 / Math.sqrt(2), 1 / Math.sqrt(2)).magnitude()', '1');
@@ -92,19 +95,66 @@
         tester.test('new Vector(1, 2).cross(new Vector(2, -1))', '-5');
 
         // Vector.rotate()
-        tester.testEquals('new Vector(1, 2).rotate(0)', 'new Vector(1, 2)');
+        tester.test('new Vector(1, 2).rotate(0)', 'new Vector(1, 2)');
         tester.testApproxEquals('new Vector(1, 2).rotate(Math.PI / 2)', 'new Vector(-2, 1)');
         tester.testApproxEquals('new Vector(1, 2).rotate(Math.PI)', 'new Vector(-1, -2)');
         tester.testApproxEquals('new Vector(1, 2).rotate(3 * Math.PI / 2)', 'new Vector(2, -1)');
         tester.testApproxEquals('new Vector(1, 2).rotate(2 * Math.PI)', 'new Vector(1, 2)');
 
+        // PointOnCurve.toString()
+        tester.test('new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1).toString()', '\'[[(1, 2) -> (3, 4)] @ 1]\'');
+
+        // PointOnCurve.equals()
+        tester.test('new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1).equals(new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1))', 'true');
+        tester.test('new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1).equals(new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(5, 6)), 0.5))', 'false');
+
+        // PointOnCurve.asVector()
+        tester.test('new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1).asVector()', 'new Vector(3, 4)');
+        tester.test('new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(5, 6)), 0.5).asVector()', 'new Vector(3, 4)');
+
+        // StraightLine.toString()
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).toString()', '\'[(1, 2) -> (3, 4)]\'');
+
+        // StraightLine.equals()
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).equals(new StraightLine(new Vector(1, 2), new Vector(3, 4)))', 'true');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).equals(new StraightLine(new Vector(3, 4), new Vector(1, 2)))', 'false');
+
+        // StraightLine.getPointAtParameter()
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(-1)', 'new Vector(-1, 0)');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(0)', 'new Vector(1, 2)');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(0.5)', 'new Vector(2, 3)');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(1)', 'new Vector(3, 4)');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(2)', 'new Vector(5, 6)');
+
+        // StraightLine.shiftOrthogonal()
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).shiftOrthogonal(-Math.sqrt(2))', 'new StraightLine(new Vector(2, 1), new Vector(4, 3))');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).shiftOrthogonal(0)', 'new StraightLine(new Vector(1, 2), new Vector(3, 4))');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).shiftOrthogonal(Math.sqrt(2))', 'new StraightLine(new Vector(0, 3), new Vector(2, 5))');
+
+        // StraightLine.getIntersectionsWithStraightLine()
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 4), new Vector(3, 2)))', '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5)]');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(3, 6), new Vector(5, 4)))', '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1.5)]');
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 1), new Vector(3, 3)))', '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), Infinity)]');
+
+        // StraightLine.getIntersectionsWithArc()
+        tester.test('new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 0), 1, 0, 0, false))', '[]');
+        tester.test('new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 1), 1, 0, 0, false))', '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)]');
+        tester.test('new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 2), 1, 0, 0, false))', '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1), new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0)]');
+
+        // StraightLine.getIntersectionsWithCurve()
+        // StraightLine.delta()
+        // StraightLine.angle()
+        // StraightLine.length()
       }
 
       function areObjectsEqual(a, b) {
-        if (typeof a != typeof b) {
+        if (typeof a.equals === 'function') {
+          if (!a.equals(b)) {
+            throw new Error('equals() method returned false');
+          }
+        } else if (typeof a != typeof b) {
           throw new Error('Types unequal: ' + typeof a + ', ' + typeof b);
-        }
-        if (typeof a == 'object') {
+        } else if (typeof a == 'object') {
           var properties = Object.getOwnPropertyNames(a);
           properties.concat(Object.getOwnPropertyNames(b));
           for (var i = 0; i < properties.length; ++i) {
@@ -119,7 +169,7 @@
           if (Math.abs(a - b) > 0.0000000001) {
             throw new Error('Unequal values ' + a + ' and ' + b);
           }
-        } else if (a != b) {
+        } else if (a !== b) {
           throw new Error('Unequal values ' + a + ' and ' + b);
         }
       }
@@ -139,9 +189,6 @@
         this.resultsDiv_.innerHTML = '';
         this.resultsDiv_.appendChild(createTextSpan('Test results'));
       }
-      Tester.prototype.testEquals = function(a, b) {
-        this.test(a + '.equals(' + b + ')', 'true');
-      };
       Tester.prototype.testApproxEquals = function(a, b) {
         this.test(a + '.subtract(' + b + ').magnitude()', '0');
       };
