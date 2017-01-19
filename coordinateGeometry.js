@@ -162,6 +162,15 @@ Vector.prototype.rotate = function(theta) {
  return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
 }
 
+function join(self, other) {
+  console.assert(self.length === other.length);
+  var result = [];
+  for (var i = 0; i < self.length; ++i) {
+    result.push({self: self[i], other: other[i]});
+  }
+  return result;
+}
+
 
 function Curve() {}
 
@@ -226,7 +235,7 @@ StraightLine.prototype.shiftOrthogonal = function(distance) {
 };
 
 // Returns an array of PointOnCurve
-StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+StraightLine.prototype.getIntersectionsWithStraightLineImpl_ = function(straightLine) {
   console.assert(isStraightLine(straightLine));
   var s1 = this.start_;
   var s2 = straightLine.start_;
@@ -237,8 +246,15 @@ StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine)
   return [new PointOnCurve(this, t)];
 };
 
-// Returns an array of PointOnCurve
-StraightLine.prototype.getIntersectionsWithArc = function(arc) {
+// Returns an array of pairs of PointOnCurve
+StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+  var self = this.getIntersectionsWithStraightLineImpl_(straightLine);
+  var other = straightLine.getIntersectionsWithStraightLineImpl_(this);
+  return join(self, other);
+};
+
+// Returns an array of PointOnLine
+StraightLine.prototype.getIntersectionsWithArcImpl_ = function(arc) {
   console.assert(isArc(arc));
   var point = arc.getCentre();
   var d = arc.getRadius();
@@ -258,9 +274,16 @@ StraightLine.prototype.getIntersectionsWithArc = function(arc) {
   }.bind(this));
 };
 
-// Returns an array of Vector
+// Returns an array of pairs of PointOnLine
+StraightLine.prototype.getIntersectionsWithArc = function(arc) {
+  var self = this.getIntersectionsWithArcImpl_(arc);
+  var other = arc.getIntersectionsWithStraightLineImpl_(this);
+  return join(self, other);
+};
+
+// Returns an array of pairs of PointOnLine
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
-  console.assert(isCurve(x));
+  console.assert(isCurve(curve));
   return curve.getIntersectionsWithStraightLine(this).map(function(pointOnCurve) {
     return pointOnCurve.asVector();
   });
@@ -268,15 +291,6 @@ StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
 
 StraightLine.prototype.delta = function() {
   return this.end_.subtract(this.start_);
-};
-
-// Angle from +vs x axis to end of line.
-StraightLine.prototype.angle = function() {
-  return this.delta().angle();
-};
-
-StraightLine.prototype.length = function() {
-  return this.delta().magnitude();
 };
 
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
@@ -328,16 +342,17 @@ Arc.prototype.shiftOrthogonal = function(distance) {
 };
 
 // Returns an array of PointOnCurve
-Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+Arc.prototype.getIntersectionsWithStraightLineImpl_ = function(straightLine) {
   console.assert(isStraightLine(straightLine));
-  var normal = new StraightLine(this.centre_, this.centre_ + straightLine.unitNormal());
-  var intersection = straightLine.getIntersectionsWithCurve(normal)[0];
+  var normal = new StraightLine(this.centre_, this.centre_.add(straightLine.delta().unitNormal()));
+  // TODO: Avoid using this Impl method.
+  var intersection = straightLine.getIntersectionsWithStraightLineImpl_(normal)[0].asVector();
   var centreToIntersection = intersection.subtract(this.centre_);
   var distance = centreToIntersection.magnitude();
   if (distance > this.radius_) {
     return [];
   }
-  var angle = centreToIntersection.angle();
+  var angle = distance === 0 ? normal.delta().angle() : centreToIntersection.angle();
   var thetas;
   if (distance === this.radius_) {
     thetas = [angle];
@@ -365,7 +380,7 @@ Arc.prototype.getIntersectionsWithArc = function(arc) {
   var overlap = this.radius_ + d - distanceBetweenCentres;
   if (overlap < 0)
     return [];
-  var thetaToPoint = centreToPoint.angle();
+  var thetaToPoint = centreToPoint.delta().angle();
   var thetas;
   if (overlap === 0)
     thetas = [thetaToPoint];
@@ -414,7 +429,7 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
     if (!endOfPreviousCurve.equals(startOfNextCurve)) {
       var originalIntersection = this.curves_[i].getPointAtParameter(0);
       console.assert(originalIntersection.equals(this.curves_[i - 1].getPointAtParameter(1)));
-      fixedShiftedCurves.push_back(new Arc(originalIntersection, Math.abs(distance), previousShift.angle(), nextShift.angle(), distance > 0));
+      fixedShiftedCurves.push_back(new Arc(originalIntersection, Math.abs(distance), previousShift.delta().angle(), nextShift.delta().angle(), distance > 0));
     }
     fixedShiftedCurves.push_back(shiftedCurves[i]);
   }

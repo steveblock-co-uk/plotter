@@ -132,14 +132,26 @@
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).shiftOrthogonal(Math.sqrt(2))', 'new StraightLine(new Vector(0, 3), new Vector(2, 5))');
 
         // StraightLine.getIntersectionsWithStraightLine()
-        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 4), new Vector(3, 2)))', '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5)]');
-        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(3, 6), new Vector(5, 4)))', '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1.5)]');
-        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 1), new Vector(3, 3)))', '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), Infinity)]');
+        tester.test(
+            'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 4), new Vector(3, 2)))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5), other: new PointOnCurve(new StraightLine(new Vector(1, 4), new Vector(3, 2)), 0.5)}]');
+        tester.test(
+            'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(3, 6), new Vector(5, 4)))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1.5), other: new PointOnCurve(new StraightLine(new Vector(3, 6), new Vector(5, 4)), 0.5)}]');
+        tester.test(
+            'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 1), new Vector(3, 3)))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), Infinity), other: new PointOnCurve(new StraightLine(new Vector(1, 1), new Vector(3, 3)), -Infinity)}]');
 
         // StraightLine.getIntersectionsWithArc()
-        tester.test('new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 0), 1, 0, 0, false))', '[]');
-        tester.test('new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 1), 1, 0, 0, false))', '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)]');
-        tester.test('new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 2), 1, 0, 0, false))', '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1), new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0)]');
+        tester.test(
+            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 0), 1, 0, 0, false))',
+            '[]');
+        tester.test(
+            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 1), 1, 0, 0, false))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5), other: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)}]');
+        tester.test(
+            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 2), 1, 0, 0, false))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1), other: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5)}, {self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0), other: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0)}]');
 
         // StraightLine.getIntersectionsWithCurve()
         // StraightLine.delta()
