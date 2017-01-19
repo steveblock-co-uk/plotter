@@ -271,7 +271,10 @@ Axes.prototype.draw = function(context, rect) {
   context.textAlign = "center";
   var xDecimalPlaces = calculateDecimalPlaces(this.xTick_);
   var xTickFirst = roundToMultiple(this.xRange_.min(), this.xTick_, true);
-  for (var x = xTickFirst; x <= this.xRange_.max(); x += this.xTick_) {
+  // Calculate the number of ticks like this to avoid cumulative rounding errors when adding xTick_.
+  var xNumTicks = Math.floor((this.xRange_.max() - xTickFirst) / this.xTick_) + 1;
+  for (var i = 0; i < xNumTicks; ++i) {
+    var x = xTickFirst + i * this.xTick_;
     context.beginPath();
     var xCoord = rect.xInterpolate(this.xRange_.fraction(x));
     context.moveTo(xCoord, rect.yMax() + tickLength); 
@@ -294,7 +297,10 @@ Axes.prototype.draw = function(context, rect) {
   var maxTextWidth = 0;
   var yDecimalPlaces = calculateDecimalPlaces(this.yTick_);
   var yTickFirst = roundToMultiple(this.yRange_.min(), this.yTick_, true);
-  for (var y = yTickFirst; y <= this.yRange_.max(); y += this.yTick_) {
+  // Calculate the number of ticks like this to avoid cumulative rounding errors when adding yTick_.
+  var yNumTicks = Math.floor((this.yRange_.max() - yTickFirst) / this.yTick_) + 1;
+  for (var i = 0; i < yNumTicks; ++i) {
+    var y = yTickFirst + i * this.yTick_;
     context.beginPath();
     var yCoord = rect.yInterpolate(1 - this.yRange_.fraction(y));
     context.moveTo(rect.x() - tickLength, yCoord); 
