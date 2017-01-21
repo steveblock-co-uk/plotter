@@ -154,9 +154,47 @@
             '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1), other: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5)}, {self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0), other: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0)}]');
 
         // StraightLine.getIntersectionsWithCurve()
+        tester.test(
+            'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithCurve(new StraightLine(new Vector(1, 4), new Vector(3, 2)))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5), other: new PointOnCurve(new StraightLine(new Vector(1, 4), new Vector(3, 2)), 0.5)}]');
+        tester.test(
+            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithCurve(new Arc(new Vector(1, 1), 1, 0, 0, false))',
+            '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5), other: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)}]');
+
         // StraightLine.delta()
-        // StraightLine.angle()
-        // StraightLine.length()
+        tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).delta()', 'new Vector(2, 2)');
+
+        // TODO: Arc
+
+        // Arc.getIntersectionsWithStraightLine()
+        tester.test(
+            'new Arc(new Vector(1, 0), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
+            '[]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
+            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)}]');
+        tester.test(
+            'new Arc(new Vector(1, 2), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
+            '[{self: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1)}, {self: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0)}]');
+
+        // Arc.getIntersectionsWithArc()
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithArc(new Arc(new Vector(-2, 1), 1, 0, 0, false))',
+            '[]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithArc(new Arc(new Vector(-1, 1), 1, 0, 0, false))',
+            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 0)}]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithArc(new Arc(new Vector(0, 1), 1, 0, 0, false))',
+            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 1/3), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 1/6)}, {self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), -1/3), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), -1/6)}]');
+
+        // Arc.getIntersectionsWithCurve()
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
+            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)}]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false))',
+            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 0)}]');
       }
 
       function areObjectsEqual(a, b) {

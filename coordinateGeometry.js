@@ -162,6 +162,12 @@ Vector.prototype.rotate = function(theta) {
  return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
 }
 
+function swap(x) {
+  return x.map(function(e) {
+    return { self: e.other, other: e.self };
+  });
+}
+
 function join(self, other) {
   console.assert(self.length === other.length);
   var result = [];
@@ -284,9 +290,8 @@ StraightLine.prototype.getIntersectionsWithArc = function(arc) {
 // Returns an array of pairs of PointOnLine
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(curve));
-  return curve.getIntersectionsWithStraightLine(this).map(function(pointOnCurve) {
-    return pointOnCurve.asVector();
-  });
+  var result = curve.getIntersectionsWithStraightLine(this);
+  return swap(result);
 };
 
 StraightLine.prototype.delta = function() {
@@ -368,8 +373,15 @@ Arc.prototype.getIntersectionsWithStraightLineImpl_ = function(straightLine) {
   }.bind(this));
 };
 
+// Returns an array of pairs of PointOnCurve
+Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+  var self = this.getIntersectionsWithStraightLineImpl_(straightLine);
+  var other = straightLine.getIntersectionsWithArcImpl_(this);
+  return join(self, other);
+};
+
 // Returns an array of PointOnCurve
-Arc.prototype.getIntersectionsWithArc = function(arc) {
+Arc.prototype.getIntersectionsWithArcImpl_ = function(arc) {
   console.assert(isArc(arc));
   var point = arc.getCentre();
   var d = arc.getRadius();
@@ -380,7 +392,7 @@ Arc.prototype.getIntersectionsWithArc = function(arc) {
   var overlap = this.radius_ + d - distanceBetweenCentres;
   if (overlap < 0)
     return [];
-  var thetaToPoint = centreToPoint.delta().angle();
+  var thetaToPoint = centreToPoint.angle();
   var thetas;
   if (overlap === 0)
     thetas = [thetaToPoint];
@@ -393,12 +405,18 @@ Arc.prototype.getIntersectionsWithArc = function(arc) {
   }.bind(this));
 };
 
-// Returns an array of Vector
+// Returns an array of pairs of PointOnCurve
+Arc.prototype.getIntersectionsWithArc = function(arc) {
+  var self = this.getIntersectionsWithArcImpl_(arc);
+  var other = arc.getIntersectionsWithArcImpl_(this);
+  return join(self, other);
+};
+
+// Returns an array of pairs of PointOnCurve
 Arc.prototype.getIntersectionsWithCurve = function(curve) {
-  console.assert(isCurve(x));
-  return curve.getIntersectionsWithArc(this).map(function(PointOnCurve) {
-    return PointOnCurve.asVector();
-  });
+  console.assert(isCurve(curve));
+  var result = curve.getIntersectionsWithArc(this);
+  return swap(result);
 };
 
 
