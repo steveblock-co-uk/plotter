@@ -1,4 +1,4 @@
-// All types are immutable, so operations return new objects
+_// All types are immutable, so operations return new objects
 
 function virtualMethod() {
   throw 'Implement me!';
@@ -168,6 +168,7 @@ function swap(x) {
   });
 }
 
+// TODO: How to make sure points are in same order?!
 function join(self, other) {
   console.assert(self.length === other.length);
   var result = [];
@@ -189,6 +190,51 @@ Curve.prototype.getIntersectionsWithArc = virtualMethod;
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
 
 
+// This should be private to CurveIntersections
+function Intersection(pointOnCurve1, pointOnCurve2) {
+  this.pointOnCurve1_ = pointOnCurve1;
+  this.pointOnCurve2_ = pointOnCurve2;
+}
+
+Intersection.TYPE_INTERNAL = 'INTERNAL';
+Intersection.TYPE_EXTERNAL = 'EXTERNAL';
+Intersection.TYPE_MIXED = 'MIXED';
+
+function isInZeroOne(x) {
+  return x >== 0 && x <== 1;
+}
+
+Intersection.prototype.asVector = function() {
+  // TODO: Check curve 2?
+  return this.pointOnCurve1_.asVector();
+};
+
+Intersection.prototype.type = function() {
+  var c1 = isInZeroOne(this.pointOnCurve1_.getParameter());
+  var c2 = isInZeroOne(this.pointOnCurve2_.getParameter());
+  if (c1 && c2) {
+    return Intersection.TYPE_INTERNAL;
+  }
+  if (!c1 && !c2) {
+    return Intersection.TYPE_EXTERNAL;
+  }
+  return Intersection.TYPE_MIXED;
+}
+
+function CurveIntersections(curve1, curve2) {
+  console.assert(isCurve(curve1));
+  console.assert(isCurve(curve2));
+  this.curve1_ = curve1;
+  this.curve2_ = curve2;
+}
+
+CurveIntersections.prototype.get = function() {
+  var i1 = this.curve1_.getIntersectionsWithCurve(this.curve2_);
+  var i2 = this.curve2_.getIntersectionsWithCurve(this.curve1_);
+  // TODO: How to join?
+}
+
+
 function PointOnCurve(curve, t) {
   console.assert(isCurve(curve));
   console.assert(isNumber(t));
@@ -206,6 +252,10 @@ PointOnCurve.prototype.equals = function(o) {
 
 PointOnCurve.prototype.asVector = function() {
   return this.curve_.getPointAtParameter(this.t_);
+};
+
+PointOnCurve.prototype.getParameter = function() {
+  return this.t_;
 };
 
 
@@ -369,8 +419,22 @@ Arc.prototype.getIntersectionsWithStraightLineImpl_ = function(straightLine) {
     ];
   }
   return thetas.map(function(theta) {
-    return new PointOnCurve(this, getParameter(this.startTheta_, this.endTheta_, theta));
+    return new PointOnCurve(this, getParameter(this.startTheta_, this.endTheta_, this.attemptToGetInRange_(theta)));
   }.bind(this));
+};
+
+// Due to wrap-around, it's arbitrary on which side of [startTheta, endTheta]
+// an out-of-range theta lies. We always use a value such that t > 1.
+Arc.prototype.attemptToGetInRange_ = function(theta) {
+  var reverse = this.endTheta_ < this.startTheta;
+  // startTheta is always in [-PI, PI).
+  var wrapped = toMinusPlusPi(theta);
+  if (!reverse && wrapped < this.startTheta_) {
+    wrapped += 2 * Math.PI;
+  } else if (reverse && wrapped > this.startTheta_) {
+    wrapped -= 2 * Math.PI;
+  }
+  return wrapped;
 };
 
 // Returns an array of pairs of PointOnCurve
@@ -401,7 +465,7 @@ Arc.prototype.getIntersectionsWithArcImpl_ = function(arc) {
     thetas = [thetaToPoint - halfAngle, thetaToPoint + halfAngle];
   }
   return thetas.map(function(theta) {
-    return new PointOnCurve(this, getParameter(this.startTheta_, this.endTheta_, theta));
+    return new PointOnCurve(this, getParameter(this.startTheta_, this.endTheta_, this.attemptToGetInRange_(theta)));
   }.bind(this));
 };
 
