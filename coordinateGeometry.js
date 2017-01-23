@@ -1,4 +1,4 @@
-_// All types are immutable, so operations return new objects
+// All types are immutable, so operations return new objects
 
 function virtualMethod() {
   throw 'Implement me!';
@@ -79,6 +79,101 @@ function toZeroMinusTwoPi(x) {
 function toMinusPlusPi(x) {
   var y = toZeroTwoPi(x);
   return y < Math.PI ? y : y - 2 * Math.PI;
+}
+
+
+function Hashable() {
+}
+
+Hashable.prototype.hashCode = virtualMethod;
+Hashable.prototype.equals = virtualMethod;
+
+
+function StringHashable() {
+}
+
+StringHashable.prototype = Object.create(Hashable.prototype);
+
+StringHashable.prototype.toString = virtualMethod;
+
+StringHashable.prototype.hashCode = function() {
+  var s = this.toString();
+  var hash = 0, i, chr, len;
+  if (s.length === 0) return hash;
+  for (i = 0, len = s.length; i < len; i++) {
+    chr   = s.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
+
+StringHashable.prototype.equals = function(o) {
+  return this.toString() === o.toString();
+};
+
+
+// Hash collisions currently unsupported
+function HashSet() {
+  this.impl_ = {};
+}
+
+HashSet.prototype.add = function(x) {
+  console.assert(x instanceof Hashable);
+  var hashCode = x.hashCode();
+  var value = this.impl_[hashCode];
+  if (value !== undefined) {
+    console.assert(x.equals(value));
+    return;
+  }
+  this.impl_[hashCode] = x;
+  return this;
+};
+
+HashSet.prototype.contains = function(x) {
+  var result = this.impl_[x.hashCode()];
+  if (result === undefined) {
+    return false;
+  }
+  return x.equals(result);
+};
+  
+
+// Given two arrays of objects, finds the list of pairs where one element in
+// each pair is from each list and the value of f() for the two elements is a
+// minimum.
+function getClosestPairs(leftArray, rightArray, f) {
+  console.assert(leftArray instanceof Array);
+  console.assert(rightArray instanceof Array);
+  console.assert(leftArray.length === rightArray.length);
+  var values = [];
+  for (var i = 0; i < leftArray.length; ++i) {
+    for (var j = 0; j < rightArray.length; ++j) {
+      values.push({
+        value: f(leftArray[i], rightArray[j]),
+        left: leftArray[i],
+        right: rightArray[j]
+      });
+    }
+  }
+  values.sort(function(i, j) {
+    return i.value - j.value;
+  });
+  var leftUsed = new HashSet();
+  var rightUsed = new HashSet();
+  var pairs = [];
+  for (var i = 0; i < values.length; ++i) {
+    var value = values[i];
+    if (leftUsed.contains(value.left) && rightUsed.contains(value.right)) {
+      continue;
+    }
+    console.assert(!leftUsed.contains(value.left));
+    console.assert(!rightUsed.contains(value.right));
+    pairs.push({left: value.left, right: value.right});
+    leftUsed.add(value.left);
+    rightUsed.add(value.right);
+  }
+  return pairs;
 }
 
 
@@ -178,11 +273,15 @@ function join(self, other) {
   return result;
 }
 
+function isInZeroOne(x) {
+  return x >= 0 && x <= 1;
+}
+
 
 function Curve() {}
 
-Curve.prototype.toString = virtualMethod;
-Curve.prototype.equals = virtualMethod;
+Curve.prototype = Object.create(StringHashable.prototype);
+
 Curve.prototype.getPointAtParameter = virtualMethod;
 Curve.prototype.shiftOrthogonal = virtualMethod;
 Curve.prototype.getIntersectionsWithStraightLine = virtualMethod;
@@ -190,28 +289,47 @@ Curve.prototype.getIntersectionsWithArc = virtualMethod;
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
 
 
-// This should be private to CurveIntersections
-function Intersection(pointOnCurve1, pointOnCurve2) {
-  this.pointOnCurve1_ = pointOnCurve1;
-  this.pointOnCurve2_ = pointOnCurve2;
+function Intersections() {
 }
 
-Intersection.TYPE_INTERNAL = 'INTERNAL';
-Intersection.TYPE_EXTERNAL = 'EXTERNAL';
-Intersection.TYPE_MIXED = 'MIXED';
-
-function isInZeroOne(x) {
-  return x >== 0 && x <== 1;
+Intersections.get = function(left, right) {
+  console.assert(isCurve(left));
+  console.assert(isCurve(right));
+  var intersectionsLeft = left.getIntersectionsWithCurve(right);
+  var intersectionsRight = right.getIntersectionsWithCurve(left);
+  var pairs = getClosestPairs(intersectionsLeft, intersectionsRight, function(intersectionLeft, intersectionRight) {
+    return intersectionLeft.asVector().subtract(intersectionRight.asVector()).magnitude();
+  });
+  return pairs.map(function(pair) {
+    return new Intersections.Intersection_(pair.left, pair.right);
+  });
 }
 
-Intersection.prototype.asVector = function() {
-  // TODO: Check curve 2?
-  return this.pointOnCurve1_.asVector();
+Intersections.Intersection_ = function(left, right) {
+  this.left_ = left;
+  this.right_ = right;
+}
+
+Intersections.Intersection_.TYPE_INTERNAL = 'INTERNAL';
+Intersections.Intersection_.TYPE_EXTERNAL = 'EXTERNAL';
+Intersections.Intersection_.TYPE_MIXED = 'MIXED';
+
+Intersections.Intersection_.prototype.getLeft = function() {
+  return this.left_;
 };
 
-Intersection.prototype.type = function() {
-  var c1 = isInZeroOne(this.pointOnCurve1_.getParameter());
-  var c2 = isInZeroOne(this.pointOnCurve2_.getParameter());
+Intersections.Intersection_.prototype.getRight = function() {
+  return this.right_;
+};
+
+Intersections.Intersection_.prototype.asVector = function() {
+  // TODO: Check curve 2?
+  return this.left_.asVector();
+};
+
+Intersections.Intersection_.prototype.type = function() {
+  var c1 = isInZeroOne(this.left_.getParameter());
+  var c2 = isInZeroOne(this.right_.getParameter());
   if (c1 && c2) {
     return Intersection.TYPE_INTERNAL;
   }
@@ -219,19 +337,6 @@ Intersection.prototype.type = function() {
     return Intersection.TYPE_EXTERNAL;
   }
   return Intersection.TYPE_MIXED;
-}
-
-function CurveIntersections(curve1, curve2) {
-  console.assert(isCurve(curve1));
-  console.assert(isCurve(curve2));
-  this.curve1_ = curve1;
-  this.curve2_ = curve2;
-}
-
-CurveIntersections.prototype.get = function() {
-  var i1 = this.curve1_.getIntersectionsWithCurve(this.curve2_);
-  var i2 = this.curve2_.getIntersectionsWithCurve(this.curve1_);
-  // TODO: How to join?
 }
 
 
@@ -242,12 +347,16 @@ function PointOnCurve(curve, t) {
   this.t_ = t;
 }
 
+PointOnCurve.prototype = Object.create(StringHashable.prototype);
+
 PointOnCurve.prototype.toString = function() {
   return '[' + this.curve_ + ' @ ' + this.t_ + ']';
 };
 
 PointOnCurve.prototype.equals = function(o) {
-  return this.curve_.equals(o.curve_) && this.t_ === o.t_;
+  // TODO: Eliminate approximate equality!
+  var tsEqual = (this.t_ === Infinity && o.t_ === Infinity) || Math.abs(this.t_ - o.t_) < 1e-10;
+  return this.curve_.equals(o.curve_) && tsEqual;
 };
 
 PointOnCurve.prototype.asVector = function() {
@@ -291,7 +400,7 @@ StraightLine.prototype.shiftOrthogonal = function(distance) {
 };
 
 // Returns an array of PointOnCurve
-StraightLine.prototype.getIntersectionsWithStraightLineImpl_ = function(straightLine) {
+StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
   console.assert(isStraightLine(straightLine));
   var s1 = this.start_;
   var s2 = straightLine.start_;
@@ -302,15 +411,8 @@ StraightLine.prototype.getIntersectionsWithStraightLineImpl_ = function(straight
   return [new PointOnCurve(this, t)];
 };
 
-// Returns an array of pairs of PointOnCurve
-StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  var self = this.getIntersectionsWithStraightLineImpl_(straightLine);
-  var other = straightLine.getIntersectionsWithStraightLineImpl_(this);
-  return join(self, other);
-};
-
 // Returns an array of PointOnLine
-StraightLine.prototype.getIntersectionsWithArcImpl_ = function(arc) {
+StraightLine.prototype.getIntersectionsWithArc = function(arc) {
   console.assert(isArc(arc));
   var point = arc.getCentre();
   var d = arc.getRadius();
@@ -331,17 +433,15 @@ StraightLine.prototype.getIntersectionsWithArcImpl_ = function(arc) {
 };
 
 // Returns an array of pairs of PointOnLine
-StraightLine.prototype.getIntersectionsWithArc = function(arc) {
-  var self = this.getIntersectionsWithArcImpl_(arc);
-  var other = arc.getIntersectionsWithStraightLineImpl_(this);
-  return join(self, other);
+StraightLine.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
+  console.assert(isCurve(curve));
+  return curve.getIntersectionsWithStraightLine(this);
 };
 
 // Returns an array of pairs of PointOnLine
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(curve));
-  var result = curve.getIntersectionsWithStraightLine(this);
-  return swap(result);
+  return curve.getIntersectionsWithCurveImpl_(this);
 };
 
 StraightLine.prototype.delta = function() {
@@ -376,7 +476,7 @@ Arc.prototype.getRadius = function() {
 };
 
 Arc.prototype.toString = function() {
-  return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + " " + (this.reverse_ ? "forward" : "reverse") + "]";
+  return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + " " + (this.reverse_ ? "reverse" : "forward") + "]";
 };
 
 Arc.prototype.equals = function(o) {
@@ -397,11 +497,10 @@ Arc.prototype.shiftOrthogonal = function(distance) {
 };
 
 // Returns an array of PointOnCurve
-Arc.prototype.getIntersectionsWithStraightLineImpl_ = function(straightLine) {
+Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
   console.assert(isStraightLine(straightLine));
   var normal = new StraightLine(this.centre_, this.centre_.add(straightLine.delta().unitNormal()));
-  // TODO: Avoid using this Impl method.
-  var intersection = straightLine.getIntersectionsWithStraightLineImpl_(normal)[0].asVector();
+  var intersection = straightLine.getIntersectionsWithStraightLine(normal)[0].asVector();
   var centreToIntersection = intersection.subtract(this.centre_);
   var distance = centreToIntersection.magnitude();
   if (distance > this.radius_) {
@@ -437,15 +536,8 @@ Arc.prototype.attemptToGetInRange_ = function(theta) {
   return wrapped;
 };
 
-// Returns an array of pairs of PointOnCurve
-Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  var self = this.getIntersectionsWithStraightLineImpl_(straightLine);
-  var other = straightLine.getIntersectionsWithArcImpl_(this);
-  return join(self, other);
-};
-
 // Returns an array of PointOnCurve
-Arc.prototype.getIntersectionsWithArcImpl_ = function(arc) {
+Arc.prototype.getIntersectionsWithArc = function(arc) {
   console.assert(isArc(arc));
   var point = arc.getCentre();
   var d = arc.getRadius();
@@ -470,17 +562,15 @@ Arc.prototype.getIntersectionsWithArcImpl_ = function(arc) {
 };
 
 // Returns an array of pairs of PointOnCurve
-Arc.prototype.getIntersectionsWithArc = function(arc) {
-  var self = this.getIntersectionsWithArcImpl_(arc);
-  var other = arc.getIntersectionsWithArcImpl_(this);
-  return join(self, other);
+Arc.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
+  console.assert(isCurve(curve));
+  return curve.getIntersectionsWithArc(this);
 };
 
 // Returns an array of pairs of PointOnCurve
 Arc.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(curve));
-  var result = curve.getIntersectionsWithArc(this);
-  return swap(result);
+  return curve.getIntersectionsWithCurveImpl_(this);
 };
 
 

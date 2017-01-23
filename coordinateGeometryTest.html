@@ -3,6 +3,12 @@
   <head>
     <script type="text/javascript" src="coordinateGeometry.js"></script>
     <script type="text/javascript">
+
+      function X(x) { this.x_ = x; }
+      X.prototype = Object.create(Hashable.prototype);
+      X.prototype.hashCode = function() { return this.x_; };
+      X.prototype.equals = function(o) { return this.x_ === o.x_; };
+
       function test() {
         var tester = new Tester(document.getElementById('testResults'));
 
@@ -51,6 +57,16 @@
         tester.test('toMinusPlusPi(2 * Math.PI)', '0');
         tester.test('toMinusPlusPi(-1)', '-1');
         tester.test('toMinusPlusPi(-2 * Math.PI)', '0');
+
+        // HashSet.contains()
+        tester.test('new HashSet().contains(new X(0))', 'false');
+        tester.test('new HashSet().add(new X(0)).add(new X(1)).contains(new X(0))', 'true');
+        tester.test('new HashSet().add(new X(0)).add(new X(1)).contains(new X(2))', 'false');
+
+        // getClosestPairs()
+        tester.test(
+            'getClosestPairs([new X(0), new X(10), new X(20)], [new X(1), new X(11), new X(21)], function(x, y) { return Math.abs(x.x_ - y.x_);})',
+            '[{left: new X(0), right: new X(1)}, {left: new X(10), right: new X(11)}, {left: new X(20), right: new X(21)}]');
 
         // Vector.toString()
         tester.test('new Vector(1, 2).toString()', '\'(1, 2)\'');
@@ -134,13 +150,13 @@
         // StraightLine.getIntersectionsWithStraightLine()
         tester.test(
             'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 4), new Vector(3, 2)))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5), other: new PointOnCurve(new StraightLine(new Vector(1, 4), new Vector(3, 2)), 0.5)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5)]');
         tester.test(
             'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(3, 6), new Vector(5, 4)))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1.5), other: new PointOnCurve(new StraightLine(new Vector(3, 6), new Vector(5, 4)), 0.5)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 1.5)]');
         tester.test(
             'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 1), new Vector(3, 3)))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), Infinity), other: new PointOnCurve(new StraightLine(new Vector(1, 1), new Vector(3, 3)), -Infinity)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), Infinity)]');
 
         // StraightLine.getIntersectionsWithArc()
         tester.test(
@@ -148,23 +164,26 @@
             '[]');
         tester.test(
             'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 1), 1, 0, 0, false))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5), other: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)]');
         tester.test(
             'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithArc(new Arc(new Vector(1, 2), 1, 0, 0, false))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1), other: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5)}, {self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0), other: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1), new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0)]');
 
         // StraightLine.getIntersectionsWithCurve()
         tester.test(
             'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithCurve(new StraightLine(new Vector(1, 4), new Vector(3, 2)))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5), other: new PointOnCurve(new StraightLine(new Vector(1, 4), new Vector(3, 2)), 0.5)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), 0.5)]');
         tester.test(
             'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithCurve(new Arc(new Vector(1, 1), 1, 0, 0, false))',
-            '[{self: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5), other: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)}]');
+            '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)]');
 
         // StraightLine.delta()
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).delta()', 'new Vector(2, 2)');
 
         // TODO: Arc
+
+        // Arc.toString()
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).toString()', '\'[(1, 1) r1 0:6.283185307179586 forward]\'');
 
         // Arc.getIntersectionsWithStraightLine()
         tester.test(
@@ -172,10 +191,10 @@
             '[]');
         tester.test(
             'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
-            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)}]');
+            '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)]');
         tester.test(
             'new Arc(new Vector(1, 2), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
-            '[{self: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 1)}, {self: new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0)}]');
+            '[new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5), new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0)]');
 
         // Arc.getIntersectionsWithArc()
         tester.test(
@@ -183,18 +202,44 @@
             '[]');
         tester.test(
             'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithArc(new Arc(new Vector(-1, 1), 1, 0, 0, false))',
-            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 0)}]');
+            '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5)]');
         tester.test(
             'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithArc(new Arc(new Vector(0, 1), 1, 0, 0, false))',
-            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 1/3), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 1/6)}, {self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 2/3), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 5/6)}]');
+            '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 1/3), new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), (1 - 1/3))]');
 
         // Arc.getIntersectionsWithCurve()
         tester.test(
             'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
-            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25), other: new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)}]');
+            '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)]');
         tester.test(
             'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false))',
-            '[{self: new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5), other: new PointOnCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false), 0)}]');
+            '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5)]');
+
+        // Intersections
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new StraightLine(new Vector(0, 2), new Vector(2, 2))).length',
+            '1');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new StraightLine(new Vector(0, 2), new Vector(2, 2)))[0].getLeft()',
+            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new StraightLine(new Vector(0, 2), new Vector(2, 2)))[0].getRight()',
+            'new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false)).length',
+            '2');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[0].getLeft()',
+            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 1/3)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[0].getRight()',
+            'new PointOnCurve(new Arc(new Vector(0, 1), 1, 0, 0, false), 1/6)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[1].getLeft()',
+            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 2/3)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[1].getRight()',
+            'new PointOnCurve(new Arc(new Vector(0, 1), 1, 0, 0, false), 5/6)');
       }
 
       function areObjectsEqual(a, b) {
