@@ -28,6 +28,13 @@ function isArc(x) {
   return x instanceof Arc;
 }
 
+// TODO: Eliminate approximate equality!
+function approxEqual(a, b) {
+  console.assert(isNumber(a));
+  console.assert(isNumber(b));
+  return (a === Infinity && b === Infinity) || (a === -Infinity && b === -Infinity) || Math.abs(a - b) < 1e-10;
+}
+
 function solveQuadratic(a, b, c) {
   console.assert(isNumber(a));
   console.assert(isNumber(b));
@@ -194,7 +201,7 @@ Vector.prototype.toString = function() {
 
 Vector.prototype.equals = function(v) {
   console.assert(isVector(v));
-  return this.x_ === v.x_ && this.y_ === v.y_;
+  return approxEqual(this.x_, v.x_) && approxEqual(this.y_, v.y_);
 };
 
 Vector.prototype.getX = function() {
@@ -261,16 +268,6 @@ function swap(x) {
   return x.map(function(e) {
     return { self: e.other, other: e.self };
   });
-}
-
-// TODO: How to make sure points are in same order?!
-function join(self, other) {
-  console.assert(self.length === other.length);
-  var result = [];
-  for (var i = 0; i < self.length; ++i) {
-    result.push({self: self[i], other: other[i]});
-  }
-  return result;
 }
 
 function isInZeroOne(x) {
@@ -354,9 +351,7 @@ PointOnCurve.prototype.toString = function() {
 };
 
 PointOnCurve.prototype.equals = function(o) {
-  // TODO: Eliminate approximate equality!
-  var tsEqual = (this.t_ === Infinity && o.t_ === Infinity) || Math.abs(this.t_ - o.t_) < 1e-10;
-  return this.curve_.equals(o.curve_) && tsEqual;
+  return this.curve_.equals(o.curve_) && approxEqual(this.t_, o.t_);;
 };
 
 PointOnCurve.prototype.asVector = function() {
@@ -451,7 +446,7 @@ StraightLine.prototype.delta = function() {
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
 function Arc(centre, radius, startTheta, endTheta, reverse) {
   console.assert(isVector(centre));
-  console.assert(isNumber(radius));
+  console.assert(isNumber(radius) && radius > 0);
   console.assert(isNumber(startTheta));
   console.assert(isNumber(endTheta));
   console.assert(isBoolean(reverse));
@@ -475,12 +470,16 @@ Arc.prototype.getRadius = function() {
   return this.radius_;
 };
 
+Arc.prototype.getReverse = function() {
+  return this.endTheta_ < this.startTheta_;
+};
+
 Arc.prototype.toString = function() {
-  return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + " " + (this.reverse_ ? "reverse" : "forward") + "]";
+  return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + "]";
 };
 
 Arc.prototype.equals = function(o) {
-  return o instanceof Arc && this.centre_.equals(o.centre_) && this.radius_ === o.radius_ && this.startTheta_ === o.startTheta_ && this.endTheta_ === o.endTheta_ && this.reverse_ === o.reverse_;
+  return o instanceof Arc && this.centre_.equals(o.centre_) && this.radius_ === o.radius_ && this.startTheta_ === o.startTheta_ && this.endTheta_ === o.endTheta_;
 };
 
 Arc.prototype.getPointAtParameter = function(t) {
@@ -492,8 +491,8 @@ Arc.prototype.getPointAtParameter = function(t) {
 // Positive distance is shift to left when viewed in direction of line.
 Arc.prototype.shiftOrthogonal = function(distance) {
   console.assert(isNumber(distance));
-  var deltaRadius = this.endTheta_ > this.startTheta_ ? -distance : distance;
-  return new Arc(this.centre_, this.radius_ + deltaRadius);
+  var deltaRadius = this.getReverse() ? distance : -distance;
+  return new Arc(this.centre_, this.radius_ + deltaRadius, this.startTheta_, this.endTheta_, this.getReverse());
 };
 
 // Returns an array of PointOnCurve
@@ -525,12 +524,11 @@ Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
 // Due to wrap-around, it's arbitrary on which side of [startTheta, endTheta]
 // an out-of-range theta lies. We always use a value such that t > 1.
 Arc.prototype.attemptToGetInRange_ = function(theta) {
-  var reverse = this.endTheta_ < this.startTheta;
   // startTheta is always in [-PI, PI).
   var wrapped = toMinusPlusPi(theta);
-  if (!reverse && wrapped < this.startTheta_) {
+  if (!this.getReverse() && wrapped < this.startTheta_) {
     wrapped += 2 * Math.PI;
-  } else if (reverse && wrapped > this.startTheta_) {
+  } else if (this.getReverse() && wrapped > this.startTheta_) {
     wrapped -= 2 * Math.PI;
   }
   return wrapped;
