@@ -177,6 +177,9 @@
             'new StraightLine(new Vector(0, 2), new Vector(2, 2)).getIntersectionsWithCurve(new Arc(new Vector(1, 1), 1, 0, 0, false))',
             '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)]');
 
+        // StraightLine.split()
+        // TODO
+
         // StraightLine.delta()
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).delta()', 'new Vector(2, 2)');
 
@@ -247,6 +250,9 @@
             'new Arc(new Vector(1, 1), 1, 0, 0, false).getIntersectionsWithCurve(new Arc(new Vector(-1, 1), 1, 0, 0, false))',
             '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5)]');
 
+        // Arc.split()
+        // TODO
+
         // Intersections
         tester.test(
             'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new StraightLine(new Vector(0, 2), new Vector(2, 2))).length',
@@ -258,24 +264,44 @@
             'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new StraightLine(new Vector(0, 2), new Vector(2, 2)))[0].getRight()',
             'new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)');
         tester.test(
-            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false)).length',
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new StraightLine(new Vector(0, 2), new Vector(2, 2)))[0].type()',
+            'Intersections.TYPE_INTERNAL');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false)).length',
             '2');
         tester.test(
-            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[0].getLeft()',
-            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 1/3)');
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[0].getLeft()',
+            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), 2/3)');
         tester.test(
-            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[0].getRight()',
-            'new PointOnCurve(new Arc(new Vector(0, 1), 1, 0, 0, false), 1/6)');
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[0].getRight()',
+            'new PointOnCurve(new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false), 4/3)');
         tester.test(
-            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[1].getLeft()',
-            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 2/3)');
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[0].type()',
+            'Intersections.TYPE_MIXED');
         tester.test(
-            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, 0, false), new Arc(new Vector(0, 1), 1, 0, 0, false))[1].getRight()',
-            'new PointOnCurve(new Arc(new Vector(0, 1), 1, 0, 0, false), 5/6)');
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[1].getLeft()',
+            'new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), 4/3)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[1].getRight()',
+            'new PointOnCurve(new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false), 20/3)');
+        tester.test(
+            'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[1].type()',
+            'Intersections.TYPE_EXTERNAL');
 
-        // PolyCurve()
+        // PolyCurve.getNumCurves()
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getNumCurves()', '2');
+
+        // PolyCurve.getPoint()
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getPoint(0)', 'new Vector(0, 0)');
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getPoint(2)', 'new Vector(3, -1)');
 
         // PolyCurve.shiftOrthogonal()
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1), new Vector(6, 2)]).shiftOrthogonal(Math.sqrt(2)).getNumCurves()', '4');
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1), new Vector(6, 2)]).shiftOrthogonal(Math.sqrt(2)).getPoint(0)', 'new Vector(-1, 1)');
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1), new Vector(6, 2)]).shiftOrthogonal(Math.sqrt(2)).getPoint(1)', 'new Vector(0, 2)');
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1), new Vector(6, 2)]).shiftOrthogonal(Math.sqrt(2)).getPoint(2)', 'new Vector(2, 2)');
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1), new Vector(6, 2)]).shiftOrthogonal(Math.sqrt(2)).getPoint(3)', 'new Vector(3, 1)');
+        tester.test('new PolyCurve([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1), new Vector(6, 2)]).shiftOrthogonal(Math.sqrt(2)).getPoint(4)', 'new Vector(5, 3)');
       }
 
       function areObjectsEqual(a, b) {

@@ -4,6 +4,10 @@ function virtualMethod() {
   throw 'Implement me!';
 }
 
+function isArray(x) {
+  return x instanceof Array;
+}
+
 function isVector(x) {
   return x instanceof Vector;
 }
@@ -26,6 +30,10 @@ function isStraightLine(x) {
 
 function isArc(x) {
   return x instanceof Arc;
+}
+
+function isPointOnCurve(x) {
+  return x instanceof PointOnCurve;
 }
 
 // TODO: Eliminate approximate equality!
@@ -284,57 +292,7 @@ Curve.prototype.shiftOrthogonal = virtualMethod;
 Curve.prototype.getIntersectionsWithStraightLine = virtualMethod;
 Curve.prototype.getIntersectionsWithArc = virtualMethod;
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
-
-
-function Intersections() {
-}
-
-Intersections.get = function(left, right) {
-  console.assert(isCurve(left));
-  console.assert(isCurve(right));
-  var intersectionsLeft = left.getIntersectionsWithCurve(right);
-  var intersectionsRight = right.getIntersectionsWithCurve(left);
-  var pairs = getClosestPairs(intersectionsLeft, intersectionsRight, function(intersectionLeft, intersectionRight) {
-    return intersectionLeft.asVector().subtract(intersectionRight.asVector()).magnitude();
-  });
-  return pairs.map(function(pair) {
-    return new Intersections.Intersection_(pair.left, pair.right);
-  });
-}
-
-Intersections.Intersection_ = function(left, right) {
-  this.left_ = left;
-  this.right_ = right;
-}
-
-Intersections.Intersection_.TYPE_INTERNAL = 'INTERNAL';
-Intersections.Intersection_.TYPE_EXTERNAL = 'EXTERNAL';
-Intersections.Intersection_.TYPE_MIXED = 'MIXED';
-
-Intersections.Intersection_.prototype.getLeft = function() {
-  return this.left_;
-};
-
-Intersections.Intersection_.prototype.getRight = function() {
-  return this.right_;
-};
-
-Intersections.Intersection_.prototype.asVector = function() {
-  // TODO: Check curve 2?
-  return this.left_.asVector();
-};
-
-Intersections.Intersection_.prototype.type = function() {
-  var c1 = isInZeroOne(this.left_.getParameter());
-  var c2 = isInZeroOne(this.right_.getParameter());
-  if (c1 && c2) {
-    return Intersection.TYPE_INTERNAL;
-  }
-  if (!c1 && !c2) {
-    return Intersection.TYPE_EXTERNAL;
-  }
-  return Intersection.TYPE_MIXED;
-}
+Curve.prototype.split = virtualMethod;
 
 
 function PointOnCurve(curve, t) {
@@ -356,6 +314,10 @@ PointOnCurve.prototype.equals = function(o) {
 
 PointOnCurve.prototype.asVector = function() {
   return this.curve_.getPointAtParameter(this.t_);
+};
+
+PointOnCurve.prototype.getCurve = function() {
+  return this.curve_;
 };
 
 PointOnCurve.prototype.getParameter = function() {
@@ -437,6 +399,12 @@ StraightLine.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(curve));
   return curve.getIntersectionsWithCurveImpl_(this);
+};
+
+StraightLine.prototype.split = function(t) {
+  console.assert(isNumber(t));
+  var splitPoint = this.getPointAtParameter(t);
+  return [new StraightLine(this.start_, splitPoint), new StraightLine(splitPoint, this.end_)];
 };
 
 StraightLine.prototype.delta = function() {
@@ -571,16 +539,95 @@ Arc.prototype.getIntersectionsWithCurve = function(curve) {
   return curve.getIntersectionsWithCurveImpl_(this);
 };
 
+Arc.prototype.split = function(t) {
+  // TODO
+  console.assert(false);
+};
 
-// In general a PolyCurve consists of a set of joined curves. This constructor uses straight line segments.
-function PolyCurve(points) {
+function Intersections() {
+}
+
+Intersections.TYPE_INTERNAL = 'INTERNAL';
+Intersections.TYPE_EXTERNAL = 'EXTERNAL';
+Intersections.TYPE_MIXED = 'MIXED';
+
+Intersections.get = function(left, right) {
+  console.assert(isCurve(left));
+  console.assert(isCurve(right));
+  var intersectionsLeft = left.getIntersectionsWithCurve(right);
+  var intersectionsRight = right.getIntersectionsWithCurve(left);
+  var pairs = getClosestPairs(intersectionsLeft, intersectionsRight, function(intersectionLeft, intersectionRight) {
+    return intersectionLeft.asVector().subtract(intersectionRight.asVector()).magnitude();
+  });
+  return pairs.map(function(pair) {
+    return new Intersections.Intersection_(pair.left, pair.right);
+  });
+}
+
+Intersections.Intersection_ = function(left, right) {
+  console.assert(isPointOnCurve(left));
+  console.assert(isPointOnCurve(right));
+  this.left_ = left;
+  this.right_ = right;
+}
+
+Intersections.Intersection_.prototype.toString = function() {
+  return '{left: ' + this.left_.toString() + ', right: ' + this.right_.toString() + '}';
+};
+
+Intersections.Intersection_.prototype.getLeft = function() {
+  return this.left_;
+};
+
+Intersections.Intersection_.prototype.getRight = function() {
+  return this.right_;
+};
+
+Intersections.Intersection_.prototype.asVector = function() {
+  // TODO: Check curve 2?
+  return this.left_.asVector();
+};
+
+Intersections.Intersection_.prototype.type = function() {
+  var c1 = isInZeroOne(this.left_.getParameter());
+  var c2 = isInZeroOne(this.right_.getParameter());
+  if (c1 && c2) {
+    return Intersections.TYPE_INTERNAL;
+  }
+  if (!c1 && !c2) {
+    return Intersections.TYPE_EXTERNAL;
+  }
+  return Intersections.TYPE_MIXED;
+}
+
+
+// TODO: Make this private
+function PolyCurve(curves) {
+  console.assert(isArray(curves));
+  this.curves_ = curves;
+}
+
+PolyCurve.fromPoints = function(points) {
   console.assert(isArray(points));
   console.assert(points.length > 1);
-  this.curves_ = [];
+  var curves = [];
   for (var i = 1; i < points.length; ++i) {
-    this.curves_.push_back(new StraightLine(points[i - 1], points[i]));
+    curves.push(new StraightLine(points[i - 1], points[i]));
   }
+  return new PolyCurve(curves);
 }
+
+PolyCurve.prototype.getNumCurves = function() {
+  return this.curves_.length;
+};
+
+PolyCurve.prototype.getPoint = function(i) {
+  console.assert(i >= 0 && i <= this.curves_.length);
+  if (i === 0) {
+    return this.curves_[0].getPointAtParameter(0);
+  }
+  return this.curves_[i - 1].getPointAtParameter(1);
+};
 
 // Positive distance is shift to left when viewed in direction of line.
 PolyCurve.prototype.shiftOrthogonal = function(distance) {
@@ -588,19 +635,52 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
   var shiftedCurves = this.curves_.map(function(curve) {
     return curve.shiftOrthogonal(distance);
   });
-  var fixedShiftedCurves = [ shiftedCurves[0] ];
-  for (var i = 1; i < this.curves_.length; ++i) {
-    // If the shifted curves do not meet, insert an arc with radius equal to the shift, so that it's tangent to adjacent
-    // straight lines.
-    // TODO: Trim lines that overlap!
-    var endOfPreviousCurve = shiftedCurves[i - 1].getPointAtParameter(1);
-    var startOfNextCurve = shiftedCurves[i].getPointAtParameter(0);
-    // TODO: Need a tolaerance for rounding errors?
-    if (!endOfPreviousCurve.equals(startOfNextCurve)) {
-      var originalIntersection = this.curves_[i].getPointAtParameter(0);
-      console.assert(originalIntersection.equals(this.curves_[i - 1].getPointAtParameter(1)));
-      fixedShiftedCurves.push_back(new Arc(originalIntersection, Math.abs(distance), previousShift.delta().angle(), nextShift.delta().angle(), distance > 0));
+  // The shifted curves may no longer meet. There are three possibilities for
+  // each pair of adjacent curves.
+  // 1. Original curves are parallel at join. Shifted curves will meet. Nothing
+  //    to do.
+  // 2. Original curves formed a convex join. Shifted curves will not meet. We
+  //    need to insert an arc between them.
+  // 3. Original curves formed a concave join. Shifted curves will typically
+  //    intersect. However, if one curve is short compared to the shift
+  //    distance, the shifted curves may not intersect. In this case we need to
+  //    consider intersection with a neighbouring curves, including arcs
+  //    inserted in step 2 above. We need to trim each shifted curve to the
+  //    intersection point. If no intersection is found, this is the end of the
+  //    poly curve.
+
+  // Step 2 - At convex joins, insert arcs.
+  var shiftedCurvesWithArcs = [];
+  for (var i = 0; i < this.curves_.length - 1; ++i) {
+    var endIncomingAngle = this.curves_[i].getAngleAtParameter(1);
+    var endOutgoingAngle = this.curves_[i + 1].getAngleAtParameter(0);
+    var endJoinAngle = toMinusPlusPi(endOutgoingAngle - endIncomingAngle);
+    var distanceSign = distance > 0 ? +1 : -1;
+    var isParallel = (endJoinAngle === 0 || endJoinAngle === -Math.PI);
+    var isConvex = !isParallel && (endJoinAngle * distanceSign) < 0;
+    shiftedCurvesWithArcs.push({
+      curve: shiftedCurves[i],
+      isProcessed: isParallel || isConvex
+    });
+    if (isConvex) {
+      shiftedCurvesWithArcs.push({
+        curve: new Arc(this.curves_[i].getPointAtParameter(1), distance, endIncomingAngle + Math.PI / 2, endOutgoingAngle + Math.PI / 2, distance > 0),
+        isProcessed: true
+      });
     }
-    fixedShiftedCurves.push_back(shiftedCurves[i]);
   }
+
+  // Step 3 - At concave joins, find intersection and trim.
+  var result = [];
+  for (var i = 0; i < shiftedCurvesWithArcs; ++i) {
+    if (shiftedCurvesWithArcs[i].isProcessed) {
+      result.push(shiftedCurvesWithArcs[i].curve);
+      continue;
+    }
+
+    // Find the next curve that this curve intersects internally with. Take the intersection at lowest param.
+    // If none are found, backtrack to the previous curve and repeat.
+  }
+
+  return new PolyCurve(result);
 };
