@@ -293,6 +293,7 @@ Curve.prototype.getIntersectionsWithStraightLine = virtualMethod;
 Curve.prototype.getIntersectionsWithArc = virtualMethod;
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
 Curve.prototype.split = virtualMethod;
+Curve.prototype.getAngleAtParameter = virtualMethod;
 
 
 function PointOnCurve(curve, t) {
@@ -405,6 +406,11 @@ StraightLine.prototype.split = function(t) {
   console.assert(isNumber(t));
   var splitPoint = this.getPointAtParameter(t);
   return [new StraightLine(this.start_, splitPoint), new StraightLine(splitPoint, this.end_)];
+};
+
+StraightLine.prototype.getAngleAtParameter = function(t) {
+  console.assert(isNumber(t));
+  return this.delta().angle();
 };
 
 StraightLine.prototype.delta = function() {
@@ -540,8 +546,22 @@ Arc.prototype.getIntersectionsWithCurve = function(curve) {
 };
 
 Arc.prototype.split = function(t) {
-  // TODO
-  console.assert(false);
+  console.assert(isNumber(t));
+  var splitTheta = interpolate(this.startTheta_, this.endTheta_, t);
+  var reverse = this.getReverse();
+  var leftReverse = t < 0 ? !reverse : reverse;
+  var rightReverse = t > 1 ? !reverse : reverse;
+  return [
+    new Arc(this.centre_, this.radius_, this.startTheta_, splitTheta, leftReverse),
+    new Arc(this.centre_, this.radius_, splitTheta, this.endTheta_, rightReverse)
+  ];
+};
+
+Arc.prototype.getAngleAtParameter = function(t) {
+  console.assert(isNumber(t));
+  var theta = interpolate(this.startTheta_, this.endTheta_, t);
+  var deltaTheta = this.getReverse() ? -Math.PI / 2 : Math.PI / 2;
+  return toMinusPlusPi(theta + deltaTheta);
 };
 
 function Intersections() {
@@ -644,10 +664,9 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
   // 3. Original curves formed a concave join. Shifted curves will typically
   //    intersect. However, if one curve is short compared to the shift
   //    distance, the shifted curves may not intersect. In this case we need to
-  //    consider intersection with a neighbouring curves, including arcs
-  //    inserted in step 2 above. We need to trim each shifted curve to the
-  //    intersection point. If no intersection is found, this is the end of the
-  //    poly curve.
+  //    consider intersection with neighbouring curves, including arcs inserted
+  //    in step 2 above. We need to trim each shifted curve to the intersection
+  //    point. If no intersection is found, this is the end of the poly curve.
 
   // Step 2 - At convex joins, insert arcs.
   var shiftedCurvesWithArcs = [];
@@ -672,15 +691,50 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
 
   // Step 3 - At concave joins, find intersection and trim.
   var result = [];
-  for (var i = 0; i < shiftedCurvesWithArcs; ++i) {
+  for (var i = 0; i < shiftedCurvesWithArcs.length - 1; ++i) {
+    // Skip curves that have been processed.
+    var incomingShiftedCurve = shiftedCurvesWithArcs[i].curve;
     if (shiftedCurvesWithArcs[i].isProcessed) {
-      result.push(shiftedCurvesWithArcs[i].curve);
+      result.push(incomingShiftedCurve);
       continue;
     }
 
-    // Find the next curve that this curve intersects internally with. Take the intersection at lowest param.
-    // If none are found, backtrack to the previous curve and repeat.
+    // See if the curves at the join intersect. If so, we're done.
+    var incomingShiftedCurve = shiftedCurvesWithArcs[i].curve;
+    var outgoingShiftedCurve = shiftedCurvesWithArcs[i + 1].curve;
+    var intersections = Intersections.get(incomingShiftedCurve, outgoingShiftedCurve).filter(isInternal);
+    // I don't think it's possible for there to be multiple internal
+    // intersections if curves are either straight lines or arcs.
+    console.assert(intersections.length < 2);
+    if (intersections.length === 1) {
+      var endParameter = intersections[0].getLeft().getParameter();
+      console.assert(endParameter > 0 && endParameter < 1);
+      result.push(incomingShiftedCurve.split(0, endParameter)[0]);
+      continue;
+    }
+    
+    // Find the 'closest' pair of curves that span this join and which
+    // intersect. There is no correct pair, as 'closest' is only a heuristic.
+    // We use total length along the curve.
+    var intersections = [];
+    for (var leftIndex = i - 1; leftIndex >= 0; leftIndex--) {
+      for (var rightIndex = i + 1; rightIndex < shiftedCurvesWithArcs.length; rightIndex++) {
+        intersections = intersections.concat(Intersections.get(shiftedCurvesWithArcs[leftIndex], shiftedCurvesWithArcs[rightIndex]).filter(isInternal));
+      }
+    }
+    intersections.sort();
+
+    /*({
+      leftIndex:
+      rightIndex:
+      intersection:
+    }*/
+    
   }
 
   return new PolyCurve(result);
 };
+
+function isInternal(intersection) {
+  return intersection.getType() === Intersections.TYPE_INTERNAL;
+}

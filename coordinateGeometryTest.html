@@ -178,7 +178,15 @@
             '[new PointOnCurve(new StraightLine(new Vector(0, 2), new Vector(2, 2)), 0.5)]');
 
         // StraightLine.split()
-        // TODO
+        tester.test(
+            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).split(0.25)',
+            '[new StraightLine(new Vector(0, 2), new Vector(0.5, 2)), new StraightLine(new Vector(0.5, 2), new Vector(2, 2))]');
+        tester.test(
+            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).split(1.25)',
+            '[new StraightLine(new Vector(0, 2), new Vector(2.5, 2)), new StraightLine(new Vector(2.5, 2), new Vector(2, 2))]');
+
+        // StrightLine.getAngleAtParameter()
+        tester.test('new StraightLine(new Vector(0, 0), new Vector(2, 2)).getAngleAtParameter(0.25)', 'Math.PI / 4');
 
         // StraightLine.delta()
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).delta()', 'new Vector(2, 2)');
@@ -251,7 +259,40 @@
             '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.5)]');
 
         // Arc.split()
-        // TODO
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 2, false).split(0.25)',
+            '[new Arc(new Vector(1, 1), 1, 0, 0.5, false), new Arc(new Vector(1, 1), 1, 0.5, 2, false)]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 2, false).split(-0.25)',
+            '[new Arc(new Vector(1, 1), 1, 0, -0.5, true), new Arc(new Vector(1, 1), 1, -0.5, 2, false)]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, 2, false).split(1.25)',
+            '[new Arc(new Vector(1, 1), 1, 0, 2.5, false), new Arc(new Vector(1, 1), 1, 2.5, 2, true)]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, -2, true).split(0.25)',
+            '[new Arc(new Vector(1, 1), 1, 0, -0.5, true), new Arc(new Vector(1, 1), 1, -0.5, -2, true)]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, -2, true).split(-0.25)',
+            '[new Arc(new Vector(1, 1), 1, 0, 0.5, false), new Arc(new Vector(1, 1), 1, 0.5, -2, true)]');
+        tester.test(
+            'new Arc(new Vector(1, 1), 1, 0, -2, true).split(1.25)',
+            '[new Arc(new Vector(1, 1), 1, 0, -2.5, true), new Arc(new Vector(1, 1), 1, -2.5, -2, false)]');
+
+        // Arc.getAngleAtParameter()
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(-0.25)', '0');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(0)', 'Math.PI / 2');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(0.25)', '-Math.PI');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(0.5)', '-Math.PI / 2');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(0.75)', '0');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(1)', 'Math.PI / 2');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getAngleAtParameter(1.25)', '-Math.PI');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(-0.25)', '0');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(0)', '-Math.PI / 2');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(0.25)', '-Math.PI');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(0.5)', 'Math.PI / 2');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(0.75)', '0');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(1)', '-Math.PI / 2');
+        tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(1.25)', '-Math.PI');
 
         // Intersections
         tester.test(
