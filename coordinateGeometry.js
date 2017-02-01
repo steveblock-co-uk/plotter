@@ -294,6 +294,7 @@ Curve.prototype.getIntersectionsWithArc = virtualMethod;
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
 Curve.prototype.split = virtualMethod;
 Curve.prototype.getAngleAtParameter = virtualMethod;
+Curve.prototype.length = virtualMethod;
 
 
 function PointOnCurve(curve, t) {
@@ -411,6 +412,10 @@ StraightLine.prototype.split = function(t) {
 StraightLine.prototype.getAngleAtParameter = function(t) {
   console.assert(isNumber(t));
   return this.delta().angle();
+};
+
+StraightLine.prototype.length = function() {
+  return this.delta().magnitude();
 };
 
 StraightLine.prototype.delta = function() {
@@ -562,6 +567,10 @@ Arc.prototype.getAngleAtParameter = function(t) {
   var theta = interpolate(this.startTheta_, this.endTheta_, t);
   var deltaTheta = this.getReverse() ? -Math.PI / 2 : Math.PI / 2;
   return toMinusPlusPi(theta + deltaTheta);
+};
+
+Arc.prototype.length = function() {
+  return Math.abs(this.endTheta_ - this.startTheta_) * this.radius_;
 };
 
 function Intersections() {

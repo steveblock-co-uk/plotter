@@ -185,8 +185,11 @@
             'new StraightLine(new Vector(0, 2), new Vector(2, 2)).split(1.25)',
             '[new StraightLine(new Vector(0, 2), new Vector(2.5, 2)), new StraightLine(new Vector(2.5, 2), new Vector(2, 2))]');
 
-        // StrightLine.getAngleAtParameter()
+        // StraightLine.getAngleAtParameter()
         tester.test('new StraightLine(new Vector(0, 0), new Vector(2, 2)).getAngleAtParameter(0.25)', 'Math.PI / 4');
+
+        // StraightLine.length()
+        tester.test('new StraightLine(new Vector(0, 0), new Vector(2, 2)).length()', '2 * Math.sqrt(2)');
 
         // StraightLine.delta()
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).delta()', 'new Vector(2, 2)');
@@ -293,6 +296,9 @@
         tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(0.75)', '0');
         tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(1)', '-Math.PI / 2');
         tester.test('new Arc(new Vector(1, 1), 1, 0, 0, true).getAngleAtParameter(1.25)', '-Math.PI');
+
+        // Arc.length()
+        tester.test('new Arc(new Vector(1, 1), 3, 0, Math.PI, false).length()', '3 * Math.PI');
 
         // Intersections
         tester.test(
