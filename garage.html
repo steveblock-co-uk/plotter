@@ -3,16 +3,64 @@
 <html>
 
   <head>
+    <script type="text/javascript" src="coordinateGeometry.js"></script>
     <script type="text/javascript">
-      var ground = new Polyline([
-        new Vector(),
-      ]);
+      function Vehicle(wheelbase, wheelRadius, height) {
+        // We assume the roof runs the length of the wheelbase.
+        this.wheelbase_ = wheelbase;
+        this.wheelRadius_ = wheelRadius;
+        this.axlesToRoof_ = height - wheelRadius;
+      }
+
+      // Traverses the ground and returns the roof height at x=0 at each step.
+      // Assumes that the ground runs in the direction of increasing x.
+      Vehicle.prototype.traverse = function(ground, step) {
+        console.assert(ground instanceof Curve);
+        console.assert(ground.getPointAtParameter(0) < ground.getPointAtParameter(1));
+        var parameterStep = step / ground.length();
+        var axlesLine = ground.shiftOrthogonal(this.wheelRadius_);
+        var xZero = new StraightLine(new Vector(0, -Infinity), new Vector(0, Infinity));
+        var heights = [];
+        for (var parameter = 0; parameter <= 1; parameter += parameterStep) {
+          var rearAxlePosition = axlesLine.getPointAtParameter(parameter);
+          var frontAxleIntersections = axlesLine
+              .getIntersectionsWithArc(new Arc(rearAxlePosition, this.wheelbase_, 0, 0, false))
+              .filter(function(intersection) {
+            return intersection.type() === Intersections.INTERNAL;
+          });
+	  // If the ground contains changes in gradient greater than 90
+	  // degrees, there will be multiple intersections, but we don't
+	  // support this.
+          console.assert(frontAxleIntersections.length === 1);
+          var frontAxlePosition = frontAxleIntersections[0].getLeft().asVector();
+          var axlesLine = new StraightLine(rearAxlePosition, frontAxlePosition);
+          var roof = axlesLine.shiftOrthogonal(this.axlesToRoof_);
+          var roofIntersections = roof.getIntersectionsWithStraightLine(xZero);
+          console.assert(roofIntersections.length === 1);
+          var roofIntersection = roofIntersections[0];
+          if (roofIntersection.type() === Intersections.INTERNAL) {
+            heights.push(roofIntersection.getLeft().asVector().getY());
+          } else {
+            heights.push(NaN);
+          }
+        }
+        return heights;
+      };
+
+      function go() {
+        // All in metres.
+        var driveway = PolyCurve.fromPoints([
+          new Vector(-5, 0),
+          new Vector(5, 1)
+        ]);
+        var campervan = new Vehicle(4, 0.3, 1.9);
+        console.log(campervan.traverse(driveway, 0.1));
+      }
 
     </script>
   </head>
 
-  <body>
-
+  <body onload="go()">
   </body>
 
 </html>
