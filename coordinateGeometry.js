@@ -310,6 +310,7 @@ PointOnCurve.prototype.toString = function() {
   return '[' + this.curve_ + ' @ ' + this.t_ + ']';
 };
 
+// Override
 PointOnCurve.prototype.equals = function(o) {
   return this.curve_.equals(o.curve_) && approxEqual(this.t_, o.t_);;
 };
@@ -341,6 +342,7 @@ StraightLine.prototype.toString = function() {
   return "[" + this.start_.toString() + " -> " + this.end_.toString() + "]";
 };
 
+// Override
 StraightLine.prototype.equals = function(o) {
   return o instanceof StraightLine && this.start_.equals(o.start_) && this.end_.equals(o.end_);
 };
@@ -457,6 +459,7 @@ Arc.prototype.toString = function() {
   return "[" + this.centre_.toString() + " r" + this.radius_ + " " + this.startTheta_ + ":" + this.endTheta_ + "]";
 };
 
+// Override
 Arc.prototype.equals = function(o) {
   return o instanceof Arc && this.centre_.equals(o.centre_) && this.radius_ === o.radius_ && this.startTheta_ === o.startTheta_ && this.endTheta_ === o.endTheta_;
 };
@@ -631,13 +634,19 @@ Intersections.Intersection_.prototype.type = function() {
 
 
 // TODO: Make this private
-// TODO: Implement Curve
 function PolyCurve(curves) {
   console.assert(isArray(curves));
   for (var i = 0; i < curves.length - 1; ++i) {
     console.assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)));
   }
   this.curves_ = curves;
+  this.startParameters_ = [];
+  var runningLength = 0;
+  for (var i = 0; i < this.curves_.length; ++i) {
+    this.startParameters_[i] = runningLength / this.length();
+    runningLength += this.curves_[i].length();
+  }
+  this.startParameters_[i] = 1;
 }
 
 PolyCurve.fromPoints = function(points) {
@@ -650,10 +659,13 @@ PolyCurve.fromPoints = function(points) {
   return new PolyCurve(curves);
 }
 
+PolyCurve.prototype = Object.create(Curve.prototype);
+
 PolyCurve.prototype.toString = function() {
   return "[" + this.curves_.map(function(curve) { return curve.toString(); }).join(", ") + "]";
 };
 
+// Override
 PolyCurve.prototype.equals = function(other) {
   if (!other instanceof PolyCurve) {
     return false;
@@ -669,16 +681,22 @@ PolyCurve.prototype.equals = function(other) {
   return true;
 };
 
-PolyCurve.prototype.getNumCurves = function() {
-  return this.curves_.length;
+Curve.prototype.getIndexAndLocalParameter_ = function(t) {
+  console.assert(isNumber(t));
+  var index = 0;
+  while (t >= this.startParameters_[index + 1] && index < this.curves_.length - 1) {
+    ++index;
+  }
+  var localParameter = getParameter(this.startParameters_[index], this.startParameters_[index + 1], t);
+  return {
+    index: index,
+    localParameter: localParameter
+  };
 };
 
-PolyCurve.prototype.getPoint = function(i) {
-  console.assert(i >= 0 && i <= this.curves_.length);
-  if (i === 0) {
-    return this.curves_[0].getPointAtParameter(0);
-  }
-  return this.curves_[i - 1].getPointAtParameter(1);
+Curve.prototype.getPointAtParameter = function(t) {
+  var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
+  return this.curves_[indexAndLocalParameter.index].getPointAtParameter(indexAndLocalParameter.localParameter);
 };
 
 // Positive distance is shift to left when viewed in direction of line.
@@ -848,6 +866,48 @@ console.log('Finding closest pair of intersecting curves for index ' + i);
   return new PolyCurve(result);
 };
 
+PolyCurve.prototype.getIntersectionsWithStraightLine = function(straightLine) {
+  // TODO
+};
+
+PolyCurve.prototype.getIntersectionsWithArc = function(arc) {
+  // TODO
+};
+
+PolyCurve.prototype.getIntersectionsWithCurve = function(curve) {
+  // TODO
+};
+
+PolyCurve.prototype.split = function(t) {
+  // TODO
+};
+
+PolyCurve.prototype.getAngleAtParameter = function(t) {
+  var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
+  return this.curves_[indexAndLocalParameter.index].getAngleAtParameter(indexAndLocalParameter.localParameter);
+};
+
+PolyCurve.prototype.length = function() {
+  return this.curves_.reduce(function(accumulator, curve) {
+    return accumulator + curve.length();
+  }, 0);
+};
+
+// TODO: Unused?
+PolyCurve.prototype.getNumCurves = function() {
+  return this.curves_.length;
+};
+
+// TODO: Unused?
+PolyCurve.prototype.getPoint = function(i) {
+  console.assert(i >= 0 && i <= this.curves_.length);
+  if (i === 0) {
+    return this.curves_[0].getPointAtParameter(0);
+  }
+  return this.curves_[i - 1].getPointAtParameter(1);
+};
+
+// TODO: Make lcoal?
 // Start inclusive, end exclusive
 function lengthOfCurves(curves, startIndex, endIndex) {
   return curves.slice(startIndex, endIndex).reduce(function(accumulator, curve) {
@@ -855,10 +915,12 @@ function lengthOfCurves(curves, startIndex, endIndex) {
   }, 0);
 }
 
+// TODO: Make lcoal?
 function distanceAlongCurves(curves, leftIndex, rightIndex, leftParameter, rightParameter) {
   return curves[leftIndex].length() * (1 - leftParameter) + lengthOfCurves(curves, leftIndex + 1, rightIndex) + curves[rightIndex].length() * rightParameter;
 }
 
+// TODO: Make lcoal?
 function isInternal(intersection) {
   return intersection.type() === Intersections.TYPE_INTERNAL;
 }
