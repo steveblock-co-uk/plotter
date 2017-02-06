@@ -289,8 +289,11 @@ Curve.prototype = Object.create(StringHashable.prototype);
 
 Curve.prototype.getPointAtParameter = virtualMethod;
 Curve.prototype.shiftOrthogonal = virtualMethod;
+// Returns an array of PointOnCurve
 Curve.prototype.getIntersectionsWithStraightLine = virtualMethod;
+// Returns an array of PointOnCurve
 Curve.prototype.getIntersectionsWithArc = virtualMethod;
+// Returns an array of PointOnCurve
 Curve.prototype.getIntersectionsWithCurve = virtualMethod;
 Curve.prototype.split = virtualMethod;
 Curve.prototype.getAngleAtParameter = virtualMethod;
@@ -372,7 +375,7 @@ StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine)
   return [new PointOnCurve(this, t)];
 };
 
-// Returns an array of PointOnLine
+// Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithArc = function(arc) {
   console.assert(isArc(arc));
   var point = arc.getCentre();
@@ -393,13 +396,13 @@ StraightLine.prototype.getIntersectionsWithArc = function(arc) {
   }.bind(this));
 };
 
-// Returns an array of pairs of PointOnLine
+// Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
   console.assert(isCurve(curve));
   return curve.getIntersectionsWithStraightLine(this);
 };
 
-// Returns an array of pairs of PointOnLine
+// Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(curve));
   return curve.getIntersectionsWithCurveImpl_(this);
@@ -541,13 +544,13 @@ Arc.prototype.getIntersectionsWithArc = function(arc) {
   }.bind(this));
 };
 
-// Returns an array of pairs of PointOnCurve
+// Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
   console.assert(isCurve(curve));
   return curve.getIntersectionsWithArc(this);
 };
 
-// Returns an array of pairs of PointOnCurve
+// Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithCurve = function(curve) {
   console.assert(isCurve(curve));
   return curve.getIntersectionsWithCurveImpl_(this);
@@ -681,7 +684,11 @@ PolyCurve.prototype.equals = function(other) {
   return true;
 };
 
-Curve.prototype.getIndexAndLocalParameter_ = function(t) {
+PolyCurve.prototype.getParameter_ = function(index, localParameter) {
+  return interpolate(this.startParameters_[index], this.startParameters_[index + ], localParameter);
+};
+
+PolyCurve.prototype.getIndexAndLocalParameter_ = function(t) {
   console.assert(isNumber(t));
   var index = 0;
   while (t >= this.startParameters_[index + 1] && index < this.curves_.length - 1) {
@@ -694,7 +701,7 @@ Curve.prototype.getIndexAndLocalParameter_ = function(t) {
   };
 };
 
-Curve.prototype.getPointAtParameter = function(t) {
+PolyCurve.prototype.getPointAtParameter = function(t) {
   var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
   return this.curves_[indexAndLocalParameter.index].getPointAtParameter(indexAndLocalParameter.localParameter);
 };
@@ -866,14 +873,37 @@ console.log('Finding closest pair of intersecting curves for index ' + i);
   return new PolyCurve(result);
 };
 
+PolyCurve.prototype.getIntersections_ = function(intersectionMethod, otherCurve) {
+  return this.curves_.map(function(curve, index) {
+    return intersectionMethod.call(this, otherCurve).map(function(intersection) {
+      return {
+        index: index,
+        intersection: intersection
+      };
+    });
+  }.bind(this)).reduce(function(accumulator, indexAndIntersection) {
+    return accumulator.concat(indexAndIntersection);
+  }).filter(function(indexAndIntersection) {
+    var isFirstCurve = (indexAndIntersection.index === 0);
+    var isLastCurve = (indexAndIntersection.index === this.curves_.length - 1);
+    var parameter = indexAndIntersection.intersection.getParameter();
+    return isInZeroOne(parameter) || (isFirstCurve && (parameter < 0)) || (isLastCurve && (parameter > 1));
+  }.bind(this)).map(function(indexAndIntersection) {
+    return new PointOnCurve(this, this.getParameter(indexAndIntersection.index, indexAndIntersection.intersection.getParameter()));
+  }.bind(this));
+};
+
+// Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  // TODO
-};
+  return this.getIntersections_(this.getIntersectionsWithStraightLine, straightLine);
+}
 
+// Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithArc = function(arc) {
-  // TODO
+  return this.getIntersections_(this.getIntersectionsWithArc, arc);
 };
 
+// Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithCurve = function(curve) {
   // TODO
 };
