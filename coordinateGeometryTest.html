@@ -335,12 +335,19 @@
             'Intersections.get(new Arc(new Vector(1, 1), 1, 0, Math.PI, false), new Arc(new Vector(0, 1), 1, 0, Math.PI/4, false))[1].type()',
             'Intersections.TYPE_EXTERNAL');
 
-        // PolyCurve.getNumCurves()
-        tester.test('PolyCurve.fromPoints([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getNumCurves()', '2');
+        // PolyCurve.getCurves()
+        tester.test(
+            'PolyCurve.fromPoints([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getCurves()',
+            '[new StraightLine(new Vector(0, 0), new Vector(1, 1)), new StraightLine(new Vector(1, 1), new Vector(3, -1))]');
 
-        // PolyCurve.getPoint()
-        tester.test('PolyCurve.fromPoints([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getPoint(0)', 'new Vector(0, 0)');
-        tester.test('PolyCurve.fromPoints([new Vector(0, 0), new Vector(1, 1), new Vector(3, -1)]).getPoint(2)', 'new Vector(3, -1)');
+        // PolyCurve.toString()
+        // TODO
+
+        // PolyCurve.equals()
+        // TODO
+
+        // PolyCurve.getPointAtParameter()
+        // TODO
 
         // PolyCurve.shiftOrthogonal()
         // Parallel
@@ -352,11 +359,11 @@
             'PolyCurve.fromPoints([new Vector(1, -1), new Vector(2, 0), new Vector(3, 1)])');
         // Convex
         tester.test(
-            'PolyCurve.fromPoints([new Vector(0, 0), new Vector(1, 1), new Vector(2, 0)]).shiftOrthogonal(Math.sqrt(2))',
-            'new PolyCurve([new StraightLine(new Vector(-1, 1), new Vector(0, 2)), new Arc(new Vector(1, 1), Math.sqrt(2), 3 * Math.PI / 4, Math.PI / 4, true), new StraightLine(new Vector(2, 2), new Vector(3, 1))])');
+            'PolyCurve.fromPoints([new Vector(0, 0), new Vector(1, 1), new Vector(2, 0)]).shiftOrthogonal(Math.sqrt(2)).getCurves()',
+            '[new StraightLine(new Vector(-1, 1), new Vector(0, 2)), new Arc(new Vector(1, 1), Math.sqrt(2), 3 * Math.PI / 4, Math.PI / 4, true), new StraightLine(new Vector(2, 2), new Vector(3, 1))]');
         tester.test(
-            'PolyCurve.fromPoints([new Vector(0, 1), new Vector(1, 0), new Vector(2, 1)]).shiftOrthogonal(-Math.sqrt(2))',
-            'new PolyCurve([new StraightLine(new Vector(-1, 0), new Vector(0, -1)), new Arc(new Vector(1, 0), Math.sqrt(2), -3 * Math.PI / 4, -Math.PI / 4, false), new StraightLine(new Vector(2, -1), new Vector(3, 0))])');
+            'PolyCurve.fromPoints([new Vector(0, 1), new Vector(1, 0), new Vector(2, 1)]).shiftOrthogonal(-Math.sqrt(2)).getCurves()',
+            '[new StraightLine(new Vector(-1, 0), new Vector(0, -1)), new Arc(new Vector(1, 0), Math.sqrt(2), -3 * Math.PI / 4, -Math.PI / 4, false), new StraightLine(new Vector(2, -1), new Vector(3, 0))]');
         // Simple concave
         tester.test(
             'PolyCurve.fromPoints([new Vector(0, 2), new Vector(2, 0), new Vector(4, 2)]).shiftOrthogonal(Math.sqrt(2))',
@@ -394,11 +401,11 @@
             'PolyCurve.fromPoints([new Vector(0, -2), new Vector(2, -2), new Vector(2, -4)])');
         // Concave, intersection with inserted arc
         tester.test(
-            'PolyCurve.fromPoints([new Vector(0, 0), new Vector(2, 0), new Vector(2, 1), new Vector(4, 1)]).shiftOrthogonal(2)',
-            'new PolyCurve([new StraightLine(new Vector(0, 2), new Vector(2 - Math.sqrt(3), 2)), new Arc(new Vector(2, 1), 2, 5 * Math.PI / 6, Math.PI / 2, true), new StraightLine(new Vector(2, 3), new Vector(4, 3))])');
+            'PolyCurve.fromPoints([new Vector(0, 0), new Vector(2, 0), new Vector(2, 1), new Vector(4, 1)]).shiftOrthogonal(2).getCurves()',
+            '[new StraightLine(new Vector(0, 2), new Vector(2 - Math.sqrt(3), 2)), new Arc(new Vector(2, 1), 2, 5 * Math.PI / 6, Math.PI / 2, true), new StraightLine(new Vector(2, 3), new Vector(4, 3))]');
         tester.test(
-            'PolyCurve.fromPoints([new Vector(0, 2), new Vector(2, 2), new Vector(2, 1), new Vector(4, 1)]).shiftOrthogonal(-2)',
-            'new PolyCurve([new StraightLine(new Vector(0, 0), new Vector(2 - Math.sqrt(3), 0)), new Arc(new Vector(2, 1), 2, -5 * Math.PI / 6, -Math.PI / 2, false), new StraightLine(new Vector(2, -1), new Vector(4, -1))])');
+            'PolyCurve.fromPoints([new Vector(0, 2), new Vector(2, 2), new Vector(2, 1), new Vector(4, 1)]).shiftOrthogonal(-2).getCurves()',
+            '[new StraightLine(new Vector(0, 0), new Vector(2 - Math.sqrt(3), 0)), new Arc(new Vector(2, 1), 2, -5 * Math.PI / 6, -Math.PI / 2, false), new StraightLine(new Vector(2, -1), new Vector(4, -1))]');
         // Concave, no intersection last
         tester.test(
             'PolyCurve.fromPoints([new Vector(0, 0), new Vector(2, 0), new Vector(2, 1)]).shiftOrthogonal(2)',
@@ -413,6 +420,25 @@
         tester.test(
             'PolyCurve.fromPoints([new Vector(0, 0), new Vector(2, 0), new Vector(2, -1), new Vector(2, -2)]).shiftOrthogonal(-3)',
             'PolyCurve.fromPoints([new Vector(0, -3), new Vector(2, -3)])');
+
+        // PolyCurve.getIntersectionsWithStraightLine()
+        // TODO
+
+        // PolyCurve.getIntersectionsWithArc()
+        // TODO
+
+        // PolyCurve.getIntersectionsWithCurve()
+        // TODO
+
+        // PolyCurve.split()
+        // TODO
+
+        // PolyCurve.getAngleAtParameter()
+        // TODO
+
+        // PolyCurve.length()
+        tester.test('PolyCurve.fromPoints([new Vector(0, 0), new Vector(2, 2), new Vector(3, 1)]).length()', '3 * Math.sqrt(2)');
+        tester.test('PolyCurve.fromPoints([new Vector(0, 0), new Vector(2, 2), new Vector(3, 1)]).shiftOrthogonal(5).length()', '3 * Math.sqrt(2) + 5 * Math.PI / 2');
       }
 
       function areObjectsEqual(a, b) {

@@ -664,6 +664,10 @@ PolyCurve.fromPoints = function(points) {
 
 PolyCurve.prototype = Object.create(Curve.prototype);
 
+PolyCurve.prototype.getCurves = function() {
+  return this.curves_.slice();
+};
+
 PolyCurve.prototype.toString = function() {
   return "[" + this.curves_.map(function(curve) { return curve.toString(); }).join(", ") + "]";
 };
@@ -685,7 +689,7 @@ PolyCurve.prototype.equals = function(other) {
 };
 
 PolyCurve.prototype.getParameter_ = function(index, localParameter) {
-  return interpolate(this.startParameters_[index], this.startParameters_[index + ], localParameter);
+  return interpolate(this.startParameters_[index], this.startParameters_[index + 1], localParameter);
 };
 
 PolyCurve.prototype.getIndexAndLocalParameter_ = function(t) {
@@ -756,18 +760,14 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
     curve: shiftedCurves[this.curves_.length - 1],
     isProcessed: true
   });
-  console.log('shifted curves with arcs');
-  console.log(shiftedCurvesWithArcs);
 
   // Step 3 - At concave joins, find intersection and trim.
   var result = [];
   var isDoneEarly = false;
   for (var i = 0; i < shiftedCurvesWithArcs.length - 1; ++i) {
-    console.log("i = " + i);
     // Skip curves that have been processed.
     var incomingShiftedCurve = shiftedCurvesWithArcs[i].curve;
     if (shiftedCurvesWithArcs[i].isProcessed) {
-      console.log("processed");
       result.push(incomingShiftedCurve);
       continue;
     }
@@ -775,13 +775,10 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
     // See if the curves at the join intersect. If so, we're done.
     var outgoingShiftedCurve = shiftedCurvesWithArcs[i + 1].curve;
     var intersections = Intersections.get(incomingShiftedCurve, outgoingShiftedCurve).filter(isInternal);
-    console.log('intersections');
-    console.log(intersections);
     // I don't think it's possible for there to be multiple internal
     // intersections if curves are either straight lines or arcs.
     console.assert(intersections.length < 2);
     if (intersections.length === 1) {
-      console.log("simple intersection");
       var intersection = intersections[0];
       var leftParameter = intersection.getLeft().getParameter();
       console.assert(leftParameter > 0 && leftParameter < 1);
@@ -802,12 +799,9 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
     // Find the 'closest' pair of curves that span this join and which
     // intersect. There is no correct pair, as 'closest' is only a heuristic.
     // We use total length along the curve.
-console.log('Finding closest pair of intersecting curves for index ' + i);
     var intersectionsAndIndices = [];
     for (var leftIndex = i; leftIndex >= 0; leftIndex--) {
       for (var rightIndex = i + 1; rightIndex < shiftedCurvesWithArcs.length; rightIndex++) {
-        console.log(leftIndex, rightIndex);
-        console.log(Intersections.get(shiftedCurvesWithArcs[leftIndex].curve, shiftedCurvesWithArcs[rightIndex].curve));
         intersectionsAndIndices = intersectionsAndIndices.concat(
             Intersections.get(shiftedCurvesWithArcs[leftIndex].curve, shiftedCurvesWithArcs[rightIndex].curve)
                 .filter(isInternal)
@@ -835,11 +829,9 @@ console.log('Finding closest pair of intersecting curves for index ' + i);
           intersectionAndIndices2.intersection.getRight().getParameter());
       return distance1 - distance2;
     });
-    console.log(intersectionsAndIndices);
 
     // If there are no intersections, this is the end of the polycurve.
     if (intersectionsAndIndices.length === 0) {
-      console.log("ending early");
       result.push(incomingShiftedCurve);
       isDoneEarly = true;
       break;
@@ -875,7 +867,7 @@ console.log('Finding closest pair of intersecting curves for index ' + i);
 
 PolyCurve.prototype.getIntersections_ = function(intersectionMethod, otherCurve) {
   return this.curves_.map(function(curve, index) {
-    return intersectionMethod.call(this, otherCurve).map(function(intersection) {
+    return intersectionMethod.call(curve, otherCurve).map(function(intersection) {
       return {
         index: index,
         intersection: intersection
@@ -895,21 +887,42 @@ PolyCurve.prototype.getIntersections_ = function(intersectionMethod, otherCurve)
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  return this.getIntersections_(this.getIntersectionsWithStraightLine, straightLine);
+  console.assert(isStraightLine(straightLine));
+  return this.getIntersections_(Curve.prototype.getIntersectionsWithStraightLine, straightLine);
 }
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithArc = function(arc) {
-  return this.getIntersections_(this.getIntersectionsWithArc, arc);
+  console.assert(isArc(arc));
+  return this.getIntersections_(Curve.prototype.getIntersectionsWithArc, arc);
 };
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithCurve = function(curve) {
-  // TODO
+  // TODO: This would require adding Curve.getIntersectionsWithPolyCurve.
+  throw 'Not implemented';
 };
 
 PolyCurve.prototype.split = function(t) {
-  // TODO
+  var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
+  var splitCurve = this.curves_[indexAndLocalParameter.index].split(indexAndLocalParameter.parameter);
+  switch (indexAndLocalParameter.index) {
+    case 0:
+      return [
+        splitCurve[0],
+        new PolyCurve([splitCurve[1]].concat(this.curves_.slice(1)))
+      ];
+    case indexAndLocalParameter.index - 1:
+      return [
+        new PolyCurve(this.curves_.slice(0, indexAndLocalParameter.index).concat(splitCurve[0])),
+        splitCurve[1],
+      ];
+    default:
+      return [
+        new PolyCurve(this.curves_.slice(0, splitCurve.index).concat(splitCurve[0])),
+        new PolyCurve([splitCurve[1]].concat(this.curves_.slice(indexAndLocalParameter.index + 1)))
+      ];
+  }
 };
 
 PolyCurve.prototype.getAngleAtParameter = function(t) {
@@ -921,20 +934,6 @@ PolyCurve.prototype.length = function() {
   return this.curves_.reduce(function(accumulator, curve) {
     return accumulator + curve.length();
   }, 0);
-};
-
-// TODO: Unused?
-PolyCurve.prototype.getNumCurves = function() {
-  return this.curves_.length;
-};
-
-// TODO: Unused?
-PolyCurve.prototype.getPoint = function(i) {
-  console.assert(i >= 0 && i <= this.curves_.length);
-  if (i === 0) {
-    return this.curves_[0].getPointAtParameter(0);
-  }
-  return this.curves_[i - 1].getPointAtParameter(1);
 };
 
 // TODO: Make lcoal?
