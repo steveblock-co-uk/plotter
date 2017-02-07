@@ -16,6 +16,10 @@ function isNumber(x) {
   return typeof x === 'number';
 }
 
+function isFiniteNumber(x) {
+  return isNumber(x) && isFinite(x);
+}
+
 function isBoolean(x) {
   return typeof x === 'boolean';
 }
@@ -40,13 +44,13 @@ function isPointOnCurve(x) {
 function approxEqual(a, b) {
   console.assert(isNumber(a));
   console.assert(isNumber(b));
-  return (a === Infinity && b === Infinity) || (a === -Infinity && b === -Infinity) || Math.abs(a - b) < 1e-10;
+  return (isNaN(a) && isNaN(b)) || (a === Infinity && b === Infinity) || (a === -Infinity && b === -Infinity) || Math.abs(a - b) < 1e-10;
 }
 
 function solveQuadratic(a, b, c) {
-  console.assert(isNumber(a));
-  console.assert(isNumber(b));
-  console.assert(isNumber(c));
+  console.assert(isFiniteNumber(a));
+  console.assert(isFiniteNumber(b));
+  console.assert(isFiniteNumber(c));
   var x = b * b - 4 * a * c;
   if (x < 0)
     return [];
@@ -57,9 +61,9 @@ function solveQuadratic(a, b, c) {
 }
 
 function calculateTriangleAngle(a, b, c) {
-  console.assert(isNumber(a));
-  console.assert(isNumber(b));
-  console.assert(isNumber(c));
+  console.assert(isFiniteNumber(a));
+  console.assert(isFiniteNumber(b));
+  console.assert(isFiniteNumber(c));
   // a2 = b2 + c2 - 2bc cos A
   return Math.acos((b * b + c * c - a * a) / (2 * b * c));
 }
@@ -80,6 +84,7 @@ function interpolate(start, end, t) {
 
 // Exclusive at zero, inclusive at two pi.
 function toZeroTwoPi(x) {
+  console.assert(isFiniteNumber(x));
   var y = x % (2 * Math.PI);
   return y > 0 ? y : y + 2 * Math.PI;
 }
@@ -266,7 +271,7 @@ Vector.prototype.cross = function(v) {
 };
 
 Vector.prototype.rotate = function(theta) {
-  console.assert(isNumber(theta));
+  console.assert(isFiniteNumber(theta));
   var cosTheta = Math.cos(theta);
   var sinTheta = Math.sin(theta);
  return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
@@ -335,6 +340,9 @@ PointOnCurve.prototype.getParameter = function() {
 function StraightLine(start, end) {
   console.assert(isVector(start));
   console.assert(isVector(end));
+  // If the line is infinite, it must be horizontal or vertical and not at +/- infinity.
+  console.assert((isFinite(start.getX()) && isFinite(end.getX())) || (isFinite(start.getY()) && (start.getY() === end.getY())));
+  console.assert((isFinite(start.getY()) && isFinite(end.getY())) || (isFinite(start.getX()) && (start.getX() === end.getX())));
   this.start_ = start;
   this.end_ = end;
 };
@@ -357,7 +365,7 @@ StraightLine.prototype.getPointAtParameter = function(t) {
 
 // Positive distance is shift to left when viewed in direction of line.
 StraightLine.prototype.shiftOrthogonal = function(distance) {
-  console.assert(isNumber(distance));
+  console.assert(isFiniteNumber(distance));
   var unitNormal = this.delta().unitNormal();
   var delta = unitNormal.multiply(distance);
   return new StraightLine(this.start_.add(delta), this.end_.add(delta));
@@ -430,10 +438,12 @@ StraightLine.prototype.delta = function() {
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
 function Arc(centre, radius, startTheta, endTheta, reverse) {
   console.assert(isVector(centre));
-  console.assert(isNumber(radius) && radius > 0);
-  console.assert(isNumber(startTheta));
-  console.assert(isNumber(endTheta));
+  console.assert(isFiniteNumber(radius) && radius > 0);
+  console.assert(isFiniteNumber(startTheta));
+  console.assert(isFiniteNumber(endTheta));
   console.assert(isBoolean(reverse));
+  // We disallow arcs at infinity.
+  console.assert(isFinite(centre.getX()) && isFinite(centre.getY()));
   this.centre_ = centre;
   this.radius_ = radius;
   // To make interpolation work simply, we need to avoid wrap-around within the range of theta values. This also allows
@@ -475,7 +485,7 @@ Arc.prototype.getPointAtParameter = function(t) {
 
 // Positive distance is shift to left when viewed in direction of line.
 Arc.prototype.shiftOrthogonal = function(distance) {
-  console.assert(isNumber(distance));
+  console.assert(isFiniteNumber(distance));
   var deltaRadius = this.getReverse() ? distance : -distance;
   return new Arc(this.centre_, this.radius_ + deltaRadius, this.startTheta_, this.endTheta_, this.getReverse());
 };
@@ -712,7 +722,7 @@ PolyCurve.prototype.getPointAtParameter = function(t) {
 
 // Positive distance is shift to left when viewed in direction of line.
 PolyCurve.prototype.shiftOrthogonal = function(distance) {
-  console.assert(isNumber(distance));
+  console.assert(isFiniteNumber(distance));
   var shiftedCurves = this.curves_.map(function(curve) {
     return curve.shiftOrthogonal(distance);
   });
