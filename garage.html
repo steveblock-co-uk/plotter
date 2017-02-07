@@ -26,22 +26,23 @@
           var frontAxleIntersections = axlesLine
               .getIntersectionsWithArc(new Arc(rearAxlePosition, this.wheelbase_, 0, 0, false))
               .filter(function(intersection) {
-            return intersection.type() === Intersections.INTERNAL;
+            return isInZeroOne(intersection.getParameter());
           });
 	  // If the ground contains changes in gradient greater than 90
 	  // degrees, there will be multiple intersections, but we don't
 	  // support this.
           console.assert(frontAxleIntersections.length === 1);
-          var frontAxlePosition = frontAxleIntersections[0].getLeft().asVector();
+          var frontAxlePosition = frontAxleIntersections[0].asVector();
           var axlesLine = new StraightLine(rearAxlePosition, frontAxlePosition);
           var roof = axlesLine.shiftOrthogonal(this.axlesToRoof_);
           var roofIntersections = roof.getIntersectionsWithStraightLine(xZero);
           console.assert(roofIntersections.length === 1);
           var roofIntersection = roofIntersections[0];
-          if (roofIntersection.type() === Intersections.INTERNAL) {
+          if (isInZeroOne(roofIntersection.getParameter())) {
             heights.push(roofIntersection.getLeft().asVector().getY());
           } else {
-            heights.push(NaN);
+            // TODO: Use floor height
+            heights.push(0);
           }
         }
         return heights;

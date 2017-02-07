@@ -865,9 +865,9 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
   return new PolyCurve(result);
 };
 
-PolyCurve.prototype.getIntersections_ = function(intersectionMethod, otherCurve) {
+PolyCurve.prototype.getIntersections_ = function(intersectionMethodName, otherCurve) {
   return this.curves_.map(function(curve, index) {
-    return intersectionMethod.call(curve, otherCurve).map(function(intersection) {
+    return curve[intersectionMethodName](otherCurve).map(function(intersection) {
       return {
         index: index,
         intersection: intersection
@@ -881,20 +881,20 @@ PolyCurve.prototype.getIntersections_ = function(intersectionMethod, otherCurve)
     var parameter = indexAndIntersection.intersection.getParameter();
     return isInZeroOne(parameter) || (isFirstCurve && (parameter < 0)) || (isLastCurve && (parameter > 1));
   }.bind(this)).map(function(indexAndIntersection) {
-    return new PointOnCurve(this, this.getParameter(indexAndIntersection.index, indexAndIntersection.intersection.getParameter()));
+    return new PointOnCurve(this, this.getParameter_(indexAndIntersection.index, indexAndIntersection.intersection.getParameter()));
   }.bind(this));
 };
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithStraightLine = function(straightLine) {
   console.assert(isStraightLine(straightLine));
-  return this.getIntersections_(Curve.prototype.getIntersectionsWithStraightLine, straightLine);
+  return this.getIntersections_('getIntersectionsWithStraightLine', straightLine);
 }
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithArc = function(arc) {
   console.assert(isArc(arc));
-  return this.getIntersections_(Curve.prototype.getIntersectionsWithArc, arc);
+  return this.getIntersections_('getIntersectionsWithArc', arc);
 };
 
 // Returns an array of PointOnCurve
