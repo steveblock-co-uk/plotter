@@ -56,14 +56,57 @@ console.log(roofIntersection.toString());
       };
 
       function go() {
-        // All in metres.
-        var driveway = PolyCurve.fromPoints([
-          new Vector(-5, 0),
-          new Vector(0, 0),
-          new Vector(5, 1)
-        ]);
+        // All in mm.
+        // track: 1700
+        // offset: 600
+        var oldData = [
+          {y: 43, x: 140},
+          {y: 62, x: 1020},
+          {y: 77, x: 1150},
+          {y: 117, x: 1370},
+          {y: 155, x: 1570},
+          {y: 197, x: 1750},
+          {y: 236, x: 1940},
+          {y: 276, x: 2140},
+          {y: 308, x: 2380},
+          {y: 346, x: 2590},
+          {y: 387, x: 2760},
+          {y: 421, x: 2940},
+        ];
+        // offset west: 500
+        // offset centre: 1300
+        // offset east: 3100
+        var thickness = 614 / 15;
+        var data = [
+          {y: 20, east: 120},
+          {y: 33, centre: 150},
+          {y: 52, west: 120},
+          {y: 1 * thickness, centre: 1145, east: 825},
+          {y: 2 * thickness, west: 990, centre: 1380, east: 1030},
+          {y: 3 * thickness, west: 1270, centre: 1630, east: 1185},
+          {y: 4 * thickness, west: 1500, centre: 1840, east: 1400},
+          {y: 5 * thickness, west: 1720, centre: 2145, east: 1610},
+          {y: 6 * thickness, west: 1935, centre: 2290, east: 1755},
+          {y: 7 * thickness, west: 2150, centre: 2495, east: 1950},
+          {y: 8 * thickness, west: 2355, centre: 2685, east: 2045},
+          {y: 9 * thickness, west: 2610, centre: 2895, east: 2320},
+          {y: 10 * thickness, west: 2850, centre: 3085, east: 2580},
+          {y: 11 * thickness, west: 3060, centre: 3330, east: 2850},
+          {y: 12 * thickness, west: 3275, centre: 3480, east: 3020},
+          {y: 13 * thickness, west: 3460, centre: 3650, east: 3170},
+          {y: 14 * thickness, west: 3570, east: 3360},
+          {y: 15 * thickness, east: 3530},
+          {y: 15 * thickness + 19, east: 3695},
+        ];
+        var driveway = PolyCurve.fromPoints(data.map(function(entry) {
+          return new Vector(Math.max(valueOrMinusInfinity(entry.west), valueOrMinusInfinity(entry.centre), valueOrMinusInfinity(entry.east)), entry.y);
+        }));
         var campervan = new Vehicle(4, 0.3, 1.9);
         console.log(campervan.traverse(driveway, 0.1));
+      }
+
+      function valueOrMinusInfinity(x) {
+        return x ? x : -Infinity;
       }
 
     </script>
