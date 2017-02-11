@@ -166,8 +166,6 @@
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(1)', 'new Vector(3, 4)');
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(2)', 'new Vector(5, 6)');
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).getPointAtParameter(Infinity)', 'new Vector(Infinity, Infinity)');
-        tester.test('new StraightLine(new Vector(1, Infinity), new Vector(3, Infinity)).getPointAtParameter(0.5)', 'new Vector(2, Infinity)');
-        tester.test('new StraightLine(new Vector(-Infinity, 0), new Vector(-Infinity, 6)).getPointAtParameter(0.5)', 'new Vector(-Infinity, 3)');
 
         // StraightLine.shiftOrthogonal()
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).shiftOrthogonal(-Math.sqrt(2))', 'new StraightLine(new Vector(2, 1), new Vector(4, 3))');
@@ -184,12 +182,6 @@
         tester.test(
             'new StraightLine(new Vector(1, 2), new Vector(3, 4)).getIntersectionsWithStraightLine(new StraightLine(new Vector(1, 1), new Vector(3, 3)))',
             '[new PointOnCurve(new StraightLine(new Vector(1, 2), new Vector(3, 4)), Infinity)]');
-        tester.test(
-            'new StraightLine(new Vector(1, 1), new Vector(5, 5)).getIntersectionsWithStraightLine(new StraightLine(new Vector(2, -Infinity), new Vector(2, Infinity)))',
-            '[new PointOnCurve(new StraightLine(new Vector(1, 1), new Vector(5, 5)), 0.25)]');
-        tester.test(
-            'new StraightLine(new Vector(1, 1), new Vector(5, 5)).getIntersectionsWithStraightLine(new StraightLine(new Vector(-Infinity, 4), new Vector(Infinity, 4)))',
-            '[new PointOnCurve(new StraightLine(new Vector(1, 1), new Vector(5, 5)), 0.75)]');
 
         // StraightLine.getIntersectionsWithArc()
         tester.test(
@@ -217,12 +209,6 @@
         tester.test(
             'new StraightLine(new Vector(0, 2), new Vector(2, 2)).split(1.25)',
             '[new StraightLine(new Vector(0, 2), new Vector(2.5, 2)), new StraightLine(new Vector(2.5, 2), new Vector(2, 2))]');
-        tester.test(
-            'new StraightLine(new Vector(0, 2), new Vector(Infinity, 2)).split(1.25)',
-            '[new StraightLine(new Vector(0, 2), new Vector(Infinity, 2)), new StraightLine(new Vector(Infinity, 2), new Vector(Infinity, 2))]');
-        tester.test(
-            'new StraightLine(new Vector(0, 2), new Vector(2, 2)).split(Infinity)',
-            '[new StraightLine(new Vector(0, 2), new Vector(Infinity, 2)), new StraightLine(new Vector(Infinity, 2), new Vector(2, 2))]');
 
         // StraightLine.getAngleAtParameter()
         tester.test('new StraightLine(new Vector(0, 0), new Vector(2, 2)).getAngleAtParameter(0.25)', 'Math.PI / 4');
@@ -233,7 +219,6 @@
 
         // StraightLine.delta()
         tester.test('new StraightLine(new Vector(1, 2), new Vector(3, 4)).delta()', 'new Vector(2, 2)');
-        tester.test('new StraightLine(new Vector(1, Infinity), new Vector(3, Infinity)).delta()', 'new Vector(2, 0)');
 
         // Arc.getCentre()
         tester.test('new Arc(new Vector(1, 1), 1, 0, 0, false).getCentre()', 'new Vector(1, 1)');
@@ -281,9 +266,6 @@
             '[new PointOnCurve(new Arc(new Vector(1, 1), 1, 0, 0, false), 0.25)]');
         tester.test(
             'new Arc(new Vector(1, 2), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 2), new Vector(2, 2)))',
-            '[new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5), new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0)]');
-        tester.test(
-            'new Arc(new Vector(1, 2), 1, 0, 0, false).getIntersectionsWithStraightLine(new StraightLine(new Vector(-Infinity, 2), new Vector(Infinity, 2)))',
             '[new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0.5), new PointOnCurve(new Arc(new Vector(1, 2), 1, 0, 0, false), 0)]');
 
         // Arc.getIntersectionsWithArc()

@@ -40,10 +40,20 @@ function isPointOnCurve(x) {
   return x instanceof PointOnCurve;
 }
 
+function isInZeroOne(x) {
+  return x >= 0 && x <= 1;
+}
+
+function assert(x, message) {
+  if (!x) {
+    throw message;
+  }
+}
+
 // TODO: Eliminate approximate equality!
 function approxEqual(a, b) {
-  console.assert(isNumber(a));
-  console.assert(isNumber(b));
+  assert(isNumber(a));
+  assert(isNumber(b));
   return (isNaN(a) && isNaN(b)) || (a === Infinity && b === Infinity) || (a === -Infinity && b === -Infinity) || Math.abs(a - b) < 1e-10;
 }
 
@@ -52,9 +62,9 @@ function multiplyPreserveZero(a, b) {
 }
 
 function solveQuadratic(a, b, c) {
-  console.assert(isFiniteNumber(a));
-  console.assert(isFiniteNumber(b));
-  console.assert(isFiniteNumber(c));
+  assert(isFiniteNumber(a));
+  assert(isFiniteNumber(b));
+  assert(isFiniteNumber(c));
   var x = b * b - 4 * a * c;
   if (x < 0)
     return [];
@@ -65,17 +75,17 @@ function solveQuadratic(a, b, c) {
 }
 
 function calculateTriangleAngle(a, b, c) {
-  console.assert(isFiniteNumber(a));
-  console.assert(isFiniteNumber(b));
-  console.assert(isFiniteNumber(c));
+  assert(isFiniteNumber(a));
+  assert(isFiniteNumber(b));
+  assert(isFiniteNumber(c));
   // a2 = b2 + c2 - 2bc cos A
   return Math.acos((b * b + c * c - a * a) / (2 * b * c));
 }
 
 function getParameter(start, end, x) {
-  console.assert(isNumber(start));
-  console.assert(isNumber(end));
-  console.assert(isNumber(x));
+  assert(isNumber(start));
+  assert(isNumber(end));
+  assert(isNumber(x));
   if (isFinite(start)) {
     return (x - start) / (end - start);
   } else {
@@ -84,9 +94,9 @@ function getParameter(start, end, x) {
 }
 
 function interpolate(start, end, t) {
-  console.assert(isNumber(t));
-  console.assert(isNumber(start));
-  console.assert(isNumber(end));
+  assert(isNumber(t));
+  assert(isNumber(start));
+  assert(isNumber(end));
   if (!isFinite(t)) {
     return Math.sign(end - start) * t;
   }
@@ -95,7 +105,7 @@ function interpolate(start, end, t) {
 
 // Exclusive at zero, inclusive at two pi.
 function toZeroTwoPi(x) {
-  console.assert(isFiniteNumber(x));
+  assert(isFiniteNumber(x));
   var y = x % (2 * Math.PI);
   return y > 0 ? y : y + 2 * Math.PI;
 }
@@ -110,6 +120,43 @@ function toZeroMinusTwoPi(x) {
 function toMinusPlusPi(x) {
   var y = toZeroTwoPi(x);
   return y < Math.PI ? y : y - 2 * Math.PI;
+}
+
+// Given two arrays of objects, finds the list of pairs where one element in
+// each pair is from each list and the value of f() for the two elements is a
+// minimum.
+function getClosestPairs(leftArray, rightArray, f) {
+  assert(leftArray instanceof Array);
+  assert(rightArray instanceof Array);
+  assert(leftArray.length === rightArray.length);
+  var values = [];
+  for (var i = 0; i < leftArray.length; ++i) {
+    for (var j = 0; j < rightArray.length; ++j) {
+      values.push({
+        value: f(leftArray[i], rightArray[j]),
+        left: leftArray[i],
+        right: rightArray[j]
+      });
+    }
+  }
+  values.sort(function(i, j) {
+    return i.value - j.value;
+  });
+  var leftUsed = new HashSet();
+  var rightUsed = new HashSet();
+  var pairs = [];
+  for (var i = 0; i < values.length; ++i) {
+    var value = values[i];
+    if (leftUsed.contains(value.left) && rightUsed.contains(value.right)) {
+      continue;
+    }
+    assert(!leftUsed.contains(value.left));
+    assert(!rightUsed.contains(value.right));
+    pairs.push({left: value.left, right: value.right});
+    leftUsed.add(value.left);
+    rightUsed.add(value.right);
+  }
+  return pairs;
 }
 
 
@@ -150,11 +197,11 @@ function HashSet() {
 }
 
 HashSet.prototype.add = function(x) {
-  console.assert(x instanceof Hashable);
+  assert(x instanceof Hashable);
   var hashCode = x.hashCode();
   var value = this.impl_[hashCode];
   if (value !== undefined) {
-    console.assert(x.equals(value));
+    assert(x.equals(value));
     return;
   }
   this.impl_[hashCode] = x;
@@ -170,47 +217,9 @@ HashSet.prototype.contains = function(x) {
 };
   
 
-// Given two arrays of objects, finds the list of pairs where one element in
-// each pair is from each list and the value of f() for the two elements is a
-// minimum.
-function getClosestPairs(leftArray, rightArray, f) {
-  console.assert(leftArray instanceof Array);
-  console.assert(rightArray instanceof Array);
-  console.assert(leftArray.length === rightArray.length);
-  var values = [];
-  for (var i = 0; i < leftArray.length; ++i) {
-    for (var j = 0; j < rightArray.length; ++j) {
-      values.push({
-        value: f(leftArray[i], rightArray[j]),
-        left: leftArray[i],
-        right: rightArray[j]
-      });
-    }
-  }
-  values.sort(function(i, j) {
-    return i.value - j.value;
-  });
-  var leftUsed = new HashSet();
-  var rightUsed = new HashSet();
-  var pairs = [];
-  for (var i = 0; i < values.length; ++i) {
-    var value = values[i];
-    if (leftUsed.contains(value.left) && rightUsed.contains(value.right)) {
-      continue;
-    }
-    console.assert(!leftUsed.contains(value.left));
-    console.assert(!rightUsed.contains(value.right));
-    pairs.push({left: value.left, right: value.right});
-    leftUsed.add(value.left);
-    rightUsed.add(value.right);
-  }
-  return pairs;
-}
-
-
 function Vector(x, y) {
-  console.assert(isNumber(x));
-  console.assert(isNumber(y));
+  assert(isNumber(x));
+  assert(isNumber(y));
   this.x_ = x;
   this.y_ = y;
 }
@@ -224,7 +233,7 @@ Vector.prototype.toString = function() {
 };
 
 Vector.prototype.equals = function(v) {
-  console.assert(isVector(v));
+  assert(isVector(v));
   return approxEqual(this.x_, v.x_) && approxEqual(this.y_, v.y_);
 };
 
@@ -236,19 +245,23 @@ Vector.prototype.getY = function() {
   return this.y_;
 };
 
+Vector.prototype.isFinite = function(other) {
+  return isFinite(this.x_) && isFinite(this.y_);
+};
+
 Vector.prototype.add = function(other) {
-  console.assert(isVector(other));
+  assert(isVector(other));
   return new Vector(this.x_ + other.x_, this.y_ + other.y_);
 };
 
 Vector.prototype.subtract = function(other) {
-  console.assert(isVector(other));
+  assert(isVector(other));
   // Handle infinity
   return new Vector((this.x_ === other.x_) ? 0 : this.x_ - other.x_, (this.y_ === other.y_) ? 0 : this.y_ - other.y_);
 };
 
 Vector.prototype.multiply = function(m) {
-  console.assert(isNumber(m));
+  assert(isNumber(m));
   return new Vector(multiplyPreserveZero(m, this.x_), multiplyPreserveZero(m, this.y_));
 };
 
@@ -273,17 +286,17 @@ Vector.prototype.unit = function() {
 };
 
 Vector.prototype.dot = function(v) {
-  console.assert(isVector(v));
+  assert(isVector(v));
   return this.x_ * v.x_ + this.y_ * v.y_;
 };
 
 Vector.prototype.cross = function(v) {
-  console.assert(isVector(v));
+  assert(isVector(v));
   return this.x_ * v.y_ - this.y_ * v.x_;
 };
 
 Vector.prototype.rotate = function(theta) {
-  console.assert(isFiniteNumber(theta));
+  assert(isFiniteNumber(theta));
   theta = toMinusPlusPi(theta);
   if (theta === -Math.PI) {
     return new Vector(-this.x_, -this.y_);
@@ -299,17 +312,10 @@ Vector.prototype.rotate = function(theta) {
  return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
 }
 
-function swap(x) {
-  return x.map(function(e) {
-    return { self: e.other, other: e.self };
-  });
-}
 
-function isInZeroOne(x) {
-  return x >= 0 && x <= 1;
-}
-
-
+// Curves can only use finite vectors. Allowing infinity complicates things
+// significantly, but doesn't add much as we already support intersections
+// outside the length of the curve. Parameters can be infinite.
 function Curve() {}
 
 Curve.prototype = Object.create(StringHashable.prototype);
@@ -328,8 +334,8 @@ Curve.prototype.length = virtualMethod;
 
 
 function PointOnCurve(curve, t) {
-  console.assert(isCurve(curve));
-  console.assert(isNumber(t));
+  assert(isCurve(curve));
+  assert(isNumber(t));
   this.curve_ = curve;
   this.t_ = t;
 }
@@ -360,11 +366,9 @@ PointOnCurve.prototype.getParameter = function() {
 
 // Directed
 function StraightLine(start, end) {
-  console.assert(isVector(start));
-  console.assert(isVector(end));
-  // If the line is infinite, it must be horizontal or vertical and not at +/- infinity.
-  console.assert((start.getX() === end.getX()) || isFinite(start.getX() - end.getX()) || (isFinite(start.getY()) && (start.getY() === end.getY())));
-  console.assert((start.getY() === end.getY()) || isFinite(start.getY() - end.getY()) || (isFinite(start.getX()) && (start.getX() === end.getX())));
+  assert(isVector(start));
+  assert(isVector(end));
+  assert(start.isFinite() && end.isFinite());
   this.start_ = start;
   this.end_ = end;
 };
@@ -381,13 +385,13 @@ StraightLine.prototype.equals = function(o) {
 };
 
 StraightLine.prototype.getPointAtParameter = function(t) {
-  console.assert(isNumber(t));
+  assert(isNumber(t));
   return this.start_.add(this.delta().multiply(t));
 };
 
 // Positive distance is shift to left when viewed in direction of line.
 StraightLine.prototype.shiftOrthogonal = function(distance) {
-  console.assert(isFiniteNumber(distance));
+  assert(isFiniteNumber(distance));
   var unitNormal = this.delta().unit().rotate(Math.PI / 2);
   var delta = unitNormal.multiply(distance);
   return new StraightLine(this.start_.add(delta), this.end_.add(delta));
@@ -395,28 +399,19 @@ StraightLine.prototype.shiftOrthogonal = function(distance) {
 
 // Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  console.assert(isStraightLine(straightLine));
+  assert(isStraightLine(straightLine));
   var s1 = this.start_;
   var s2 = straightLine.start_;
   var d1 = this.delta();
   var d2 = straightLine.delta();
-  var t;
-  if (!isFinite(d2.getX())) {
-    // Other line must have constant y.
-    t = (s2.getY() - s1.getY()) / d1.getY();
-  } else if (!isFinite(d2.getY())) {
-    // Other line must have constant x.
-    t = (s2.getX() - s1.getX()) / d1.getX();
-  } else {
-    t = (d2.getX() * (s1.getY() - s2.getY()) - d2.getY() * (s1.getX() - s2.getX())) /
+  var t = (d2.getX() * (s1.getY() - s2.getY()) - d2.getY() * (s1.getX() - s2.getX())) /
       (d1.getX() * d2.getY() - d2.getX() * d1.getY());
-  }
   return [new PointOnCurve(this, t)];
 };
 
 // Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithArc = function(arc) {
-  console.assert(isArc(arc));
+  assert(isArc(arc));
   var point = arc.getCentre();
   var d = arc.getRadius();
 
@@ -437,24 +432,24 @@ StraightLine.prototype.getIntersectionsWithArc = function(arc) {
 
 // Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
-  console.assert(isCurve(curve));
+  assert(isCurve(curve));
   return curve.getIntersectionsWithStraightLine(this);
 };
 
 // Returns an array of PointOnCurve
 StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
-  console.assert(isCurve(curve));
+  assert(isCurve(curve));
   return curve.getIntersectionsWithCurveImpl_(this);
 };
 
 StraightLine.prototype.split = function(t) {
-  console.assert(isNumber(t));
+  assert(isFiniteNumber(t));
   var splitPoint = this.getPointAtParameter(t);
   return [new StraightLine(this.start_, splitPoint), new StraightLine(splitPoint, this.end_)];
 };
 
 StraightLine.prototype.getAngleAtParameter = function(t) {
-  console.assert(isNumber(t));
+  assert(isNumber(t));
   return this.delta().angle();
 };
 
@@ -468,13 +463,12 @@ StraightLine.prototype.delta = function() {
 
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
 function Arc(centre, radius, startTheta, endTheta, reverse) {
-  console.assert(isVector(centre));
-  console.assert(isFiniteNumber(radius) && radius > 0);
-  console.assert(isFiniteNumber(startTheta));
-  console.assert(isFiniteNumber(endTheta));
-  console.assert(isBoolean(reverse));
-  // We disallow arcs at infinity.
-  console.assert(isFinite(centre.getX()) && isFinite(centre.getY()));
+  assert(isVector(centre));
+  assert(isFiniteNumber(radius) && radius > 0);
+  assert(isFiniteNumber(startTheta));
+  assert(isFiniteNumber(endTheta));
+  assert(isBoolean(reverse));
+  assert(isFinite(centre.getX()) && isFinite(centre.getY()));
   this.centre_ = centre;
   this.radius_ = radius;
   // To make interpolation work simply, we need to avoid wrap-around within the range of theta values. This also allows
@@ -509,24 +503,23 @@ Arc.prototype.equals = function(o) {
 };
 
 Arc.prototype.getPointAtParameter = function(t) {
-  console.assert(isNumber(t));
+  assert(isNumber(t));
   var theta = interpolate(this.startTheta_, this.endTheta_, t);
   return this.centre_.add(new Vector(Math.cos(theta), Math.sin(theta)).multiply(this.radius_));
 };
 
 // Positive distance is shift to left when viewed in direction of line.
 Arc.prototype.shiftOrthogonal = function(distance) {
-  console.assert(isFiniteNumber(distance));
+  assert(isFiniteNumber(distance));
   var deltaRadius = this.getReverse() ? distance : -distance;
   return new Arc(this.centre_, this.radius_ + deltaRadius, this.startTheta_, this.endTheta_, this.getReverse());
 };
 
 // Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  console.assert(isStraightLine(straightLine));
+  assert(isStraightLine(straightLine));
   var normal = new StraightLine(this.centre_, this.centre_.add(straightLine.delta().unit().rotate(Math.PI / 2)));
-  // We use straightLine as the 'other' line here as it may be infinite.
-  var intersection = normal.getIntersectionsWithStraightLine(straightLine)[0].asVector();
+  var intersection = straightLine.getIntersectionsWithStraightLine(normal)[0].asVector();
   var centreToIntersection = intersection.subtract(this.centre_);
   var distance = centreToIntersection.magnitude();
   if (distance > this.radius_) {
@@ -563,7 +556,7 @@ Arc.prototype.attemptToGetInRange_ = function(theta) {
 
 // Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithArc = function(arc) {
-  console.assert(isArc(arc));
+  assert(isArc(arc));
   var point = arc.getCentre();
   var d = arc.getRadius();
 
@@ -588,18 +581,18 @@ Arc.prototype.getIntersectionsWithArc = function(arc) {
 
 // Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithCurveImpl_ = function(curve) {
-  console.assert(isCurve(curve));
+  assert(isCurve(curve));
   return curve.getIntersectionsWithArc(this);
 };
 
 // Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithCurve = function(curve) {
-  console.assert(isCurve(curve));
+  assert(isCurve(curve));
   return curve.getIntersectionsWithCurveImpl_(this);
 };
 
 Arc.prototype.split = function(t) {
-  console.assert(isNumber(t));
+  assert(isFiniteNumber(t));
   var splitTheta = interpolate(this.startTheta_, this.endTheta_, t);
   var reverse = this.getReverse();
   var leftReverse = t < 0 ? !reverse : reverse;
@@ -611,7 +604,7 @@ Arc.prototype.split = function(t) {
 };
 
 Arc.prototype.getAngleAtParameter = function(t) {
-  console.assert(isNumber(t));
+  assert(isNumber(t));
   var theta = interpolate(this.startTheta_, this.endTheta_, t);
   var deltaTheta = this.getReverse() ? -Math.PI / 2 : Math.PI / 2;
   return toMinusPlusPi(theta + deltaTheta);
@@ -629,8 +622,8 @@ Intersections.TYPE_EXTERNAL = 'EXTERNAL';
 Intersections.TYPE_MIXED = 'MIXED';
 
 Intersections.get = function(left, right) {
-  console.assert(isCurve(left));
-  console.assert(isCurve(right));
+  assert(isCurve(left));
+  assert(isCurve(right));
   var intersectionsLeft = left.getIntersectionsWithCurve(right);
   var intersectionsRight = right.getIntersectionsWithCurve(left);
   var pairs = getClosestPairs(intersectionsLeft, intersectionsRight, function(intersectionLeft, intersectionRight) {
@@ -642,8 +635,8 @@ Intersections.get = function(left, right) {
 }
 
 Intersections.Intersection_ = function(left, right) {
-  console.assert(isPointOnCurve(left));
-  console.assert(isPointOnCurve(right));
+  assert(isPointOnCurve(left));
+  assert(isPointOnCurve(right));
   this.left_ = left;
   this.right_ = right;
 }
@@ -680,9 +673,9 @@ Intersections.Intersection_.prototype.type = function() {
 
 // TODO: Make this private
 function PolyCurve(curves) {
-  console.assert(isArray(curves));
+  assert(isArray(curves));
   for (var i = 0; i < curves.length - 1; ++i) {
-    console.assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)));
+    assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)));
   }
   this.curves_ = curves;
   this.startParameters_ = [];
@@ -695,8 +688,8 @@ function PolyCurve(curves) {
 }
 
 PolyCurve.fromPoints = function(points) {
-  console.assert(isArray(points));
-  console.assert(points.length > 1);
+  assert(isArray(points));
+  assert(points.length > 1);
   var curves = [];
   for (var i = 1; i < points.length; ++i) {
     curves.push(new StraightLine(points[i - 1], points[i]));
@@ -735,7 +728,7 @@ PolyCurve.prototype.getParameter_ = function(index, localParameter) {
 };
 
 PolyCurve.prototype.getIndexAndLocalParameter_ = function(t) {
-  console.assert(isNumber(t));
+  assert(isNumber(t));
   var index = 0;
   while (t >= this.startParameters_[index + 1] && index < this.curves_.length - 1) {
     ++index;
@@ -748,13 +741,14 @@ PolyCurve.prototype.getIndexAndLocalParameter_ = function(t) {
 };
 
 PolyCurve.prototype.getPointAtParameter = function(t) {
+  assert(isFiniteNumber(t));
   var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
   return this.curves_[indexAndLocalParameter.index].getPointAtParameter(indexAndLocalParameter.localParameter);
 };
 
 // Positive distance is shift to left when viewed in direction of line.
 PolyCurve.prototype.shiftOrthogonal = function(distance) {
-  console.assert(isFiniteNumber(distance));
+  assert(isFiniteNumber(distance));
   var shiftedCurves = this.curves_.map(function(curve) {
     return curve.shiftOrthogonal(distance);
   });
@@ -819,18 +813,18 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
     var intersections = Intersections.get(incomingShiftedCurve, outgoingShiftedCurve).filter(isInternal);
     // I don't think it's possible for there to be multiple internal
     // intersections if curves are either straight lines or arcs.
-    console.assert(intersections.length < 2);
+    assert(intersections.length < 2);
     if (intersections.length === 1) {
       var intersection = intersections[0];
       var leftParameter = intersection.getLeft().getParameter();
-      console.assert(leftParameter > 0 && leftParameter < 1);
-      console.assert(intersection.getLeft().getCurve() === incomingShiftedCurve);
+      assert(leftParameter > 0 && leftParameter < 1);
+      assert(intersection.getLeft().getCurve() === incomingShiftedCurve);
       result.push(incomingShiftedCurve.split(leftParameter)[0]);
       // Put the trimmed outgoing curve back into the input list, as we may
       // need to process it again.
       var rightParameter = intersection.getRight().getParameter();
-      console.assert(rightParameter > 0 && rightParameter < 1);
-      console.assert(intersection.getRight().getCurve() === outgoingShiftedCurve);
+      assert(rightParameter > 0 && rightParameter < 1);
+      assert(intersection.getRight().getCurve() === outgoingShiftedCurve);
       shiftedCurvesWithArcs[i + 1] = {
         curve: outgoingShiftedCurve.split(rightParameter)[1],
         isProcessed: shiftedCurvesWithArcs[i + 1].isProcessed
@@ -886,18 +880,18 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
       result.pop();
     }
     var leftParameter = closestIntersectionAndIndices.intersection.getLeft().getParameter();
-    console.assert(leftParameter > 0 && leftParameter < 1);
+    assert(leftParameter > 0 && leftParameter < 1);
     result.push(closestIntersectionAndIndices.intersection.getLeft().getCurve().split(leftParameter)[0]);
 
     // Put the trimmed outgoing curve back into the input list, as we may need
     // to process it again, and jump ahead to it.
     var rightParameter = closestIntersectionAndIndices.intersection.getRight().getParameter();
-    console.assert(rightParameter > 0 && rightParameter < 1);
+    assert(rightParameter > 0 && rightParameter < 1);
     shiftedCurvesWithArcs[closestIntersectionAndIndices.rightIndex] = {
       curve: closestIntersectionAndIndices.intersection.getRight().getCurve().split(rightParameter)[1],
       isProcessed: shiftedCurvesWithArcs[closestIntersectionAndIndices.rightIndex].isProcessed
     };
-    console.assert(i < closestIntersectionAndIndices.rightIndex);
+    assert(i < closestIntersectionAndIndices.rightIndex);
     i = closestIntersectionAndIndices.rightIndex - 1;
   }
   if (!isDoneEarly) {
@@ -929,13 +923,13 @@ PolyCurve.prototype.getIntersections_ = function(intersectionMethodName, otherCu
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithStraightLine = function(straightLine) {
-  console.assert(isStraightLine(straightLine));
+  assert(isStraightLine(straightLine));
   return this.getIntersections_('getIntersectionsWithStraightLine', straightLine);
 }
 
 // Returns an array of PointOnCurve
 PolyCurve.prototype.getIntersectionsWithArc = function(arc) {
-  console.assert(isArc(arc));
+  assert(isArc(arc));
   return this.getIntersections_('getIntersectionsWithArc', arc);
 };
 
