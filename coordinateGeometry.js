@@ -47,6 +47,10 @@ function approxEqual(a, b) {
   return (isNaN(a) && isNaN(b)) || (a === Infinity && b === Infinity) || (a === -Infinity && b === -Infinity) || Math.abs(a - b) < 1e-10;
 }
 
+function multiplyPreserveZero(a, b) {
+  return (a === 0 || b === 0) ? 0 : a * b;
+}
+
 function solveQuadratic(a, b, c) {
   console.assert(isFiniteNumber(a));
   console.assert(isFiniteNumber(b));
@@ -72,13 +76,20 @@ function getParameter(start, end, x) {
   console.assert(isNumber(start));
   console.assert(isNumber(end));
   console.assert(isNumber(x));
-  return (x - start) / (end - start);
+  if (isFinite(start)) {
+    return (x - start) / (end - start);
+  } else {
+    return 1 - (x - end) / (start - end);
+  }
 }
 
 function interpolate(start, end, t) {
   console.assert(isNumber(t));
   console.assert(isNumber(start));
   console.assert(isNumber(end));
+  if (!isFinite(t)) {
+    return Math.sign(end - start) * t;
+  }
   return start * (1 - t) + end * t;
 }
 
@@ -232,12 +243,13 @@ Vector.prototype.add = function(other) {
 
 Vector.prototype.subtract = function(other) {
   console.assert(isVector(other));
-  return new Vector(this.x_ - other.x_, this.y_ - other.y_);
+  // Handle infinity
+  return new Vector((this.x_ === other.x_) ? 0 : this.x_ - other.x_, (this.y_ === other.y_) ? 0 : this.y_ - other.y_);
 };
 
 Vector.prototype.multiply = function(m) {
   console.assert(isNumber(m));
-  return new Vector(m * this.x_, m * this.y_);
+  return new Vector(multiplyPreserveZero(m, this.x_), multiplyPreserveZero(m, this.y_));
 };
 
 Vector.prototype.magnitude = function() {
@@ -250,14 +262,14 @@ Vector.prototype.angle = function() {
 };
 
 Vector.prototype.unit = function() {
+  if (!isFinite(this.x_) && !isFinite(this.y_)) {
+    return new Vector(Math.sign(this.x_) / Math.sqrt(2), Math.sign(this.y_) / Math.sqrt(2));
+  } else if (!isFinite(this.x_)) {
+    return new Vector(Math.sign(this.x_), 0);
+  } else if (!isFinite(this.y_)) {
+    return new Vector(0, Math.sign(this.y_));
+  }
   return this.multiply(1 / this.magnitude());
-};
-
-// Gets unit normal that is rotated +90 degrees.
-Vector.prototype.unitNormal = function() {
-  var unit = this.unit();
-  // Special-case rather than using rotate() to avoid rounding errors.
-  return new Vector(-unit.getY(), unit.getX());
 };
 
 Vector.prototype.dot = function(v) {
@@ -272,6 +284,16 @@ Vector.prototype.cross = function(v) {
 
 Vector.prototype.rotate = function(theta) {
   console.assert(isFiniteNumber(theta));
+  theta = toMinusPlusPi(theta);
+  if (theta === -Math.PI) {
+    return new Vector(-this.x_, -this.y_);
+  } else if (theta === -Math.PI / 2) {
+    return new Vector(this.y_, -this.x_);
+  } else if (theta === 0) {
+    return new Vector(this.x_, this.y_);
+  } else if (theta === Math.PI / 2) {
+    return new Vector(-this.y_, this.x_);
+  }
   var cosTheta = Math.cos(theta);
   var sinTheta = Math.sin(theta);
  return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
@@ -341,8 +363,8 @@ function StraightLine(start, end) {
   console.assert(isVector(start));
   console.assert(isVector(end));
   // If the line is infinite, it must be horizontal or vertical and not at +/- infinity.
-  console.assert((isFinite(start.getX()) && isFinite(end.getX())) || (isFinite(start.getY()) && (start.getY() === end.getY())));
-  console.assert((isFinite(start.getY()) && isFinite(end.getY())) || (isFinite(start.getX()) && (start.getX() === end.getX())));
+  console.assert((start.getX() === end.getX()) || isFinite(start.getX() - end.getX()) || (isFinite(start.getY()) && (start.getY() === end.getY())));
+  console.assert((start.getY() === end.getY()) || isFinite(start.getY() - end.getY()) || (isFinite(start.getX()) && (start.getX() === end.getX())));
   this.start_ = start;
   this.end_ = end;
 };
@@ -366,7 +388,7 @@ StraightLine.prototype.getPointAtParameter = function(t) {
 // Positive distance is shift to left when viewed in direction of line.
 StraightLine.prototype.shiftOrthogonal = function(distance) {
   console.assert(isFiniteNumber(distance));
-  var unitNormal = this.delta().unitNormal();
+  var unitNormal = this.delta().unit().rotate(Math.PI / 2);
   var delta = unitNormal.multiply(distance);
   return new StraightLine(this.start_.add(delta), this.end_.add(delta));
 };
@@ -378,8 +400,17 @@ StraightLine.prototype.getIntersectionsWithStraightLine = function(straightLine)
   var s2 = straightLine.start_;
   var d1 = this.delta();
   var d2 = straightLine.delta();
-  var t = (d2.getX() * (s1.getY() - s2.getY()) - d2.getY() * (s1.getX() - s2.getX())) /
+  var t;
+  if (!isFinite(d2.getX())) {
+    // Other line must have constant y.
+    t = (s2.getY() - s1.getY()) / d1.getY();
+  } else if (!isFinite(d2.getY())) {
+    // Other line must have constant x.
+    t = (s2.getX() - s1.getX()) / d1.getX();
+  } else {
+    t = (d2.getX() * (s1.getY() - s2.getY()) - d2.getY() * (s1.getX() - s2.getX())) /
       (d1.getX() * d2.getY() - d2.getX() * d1.getY());
+  }
   return [new PointOnCurve(this, t)];
 };
 
@@ -493,8 +524,9 @@ Arc.prototype.shiftOrthogonal = function(distance) {
 // Returns an array of PointOnCurve
 Arc.prototype.getIntersectionsWithStraightLine = function(straightLine) {
   console.assert(isStraightLine(straightLine));
-  var normal = new StraightLine(this.centre_, this.centre_.add(straightLine.delta().unitNormal()));
-  var intersection = straightLine.getIntersectionsWithStraightLine(normal)[0].asVector();
+  var normal = new StraightLine(this.centre_, this.centre_.add(straightLine.delta().unit().rotate(Math.PI / 2)));
+  // We use straightLine as the 'other' line here as it may be infinite.
+  var intersection = normal.getIntersectionsWithStraightLine(straightLine)[0].asVector();
   var centreToIntersection = intersection.subtract(this.centre_);
   var distance = centreToIntersection.magnitude();
   if (distance > this.radius_) {
