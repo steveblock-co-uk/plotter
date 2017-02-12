@@ -388,9 +388,9 @@
             '[new StraightLine(Vector.Origin, new Vector(1, 1)), new StraightLine(new Vector(1, 1), new Vector(3, -1))]');
 
         // PolyCurve.getPointAtParameter()
-        tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(-1 / 6)', 'new Vector(-1 / 2, -1 / 2)');
+        tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(-1 / 6)', 'new Vector(-0.5, -0.5)');
         tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(0)', 'Vector.Origin');
-        tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(1 / 6)', 'new Vector(1 / 2, 1 / 2)');
+        tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(1 / 6)', 'new Vector(0.5, 0.5)');
         tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(1 / 3)', 'new Vector(1, 1)');
         tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(2 / 3)', 'new Vector(2, 0)');
         tester.test('PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getPointAtParameter(1)', 'new Vector(3, -1)');
@@ -476,13 +476,13 @@
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 1), new Vector(1, 1)))',
             '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 1 / 3)]');
         tester.test(
-            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 1 / 2), new Vector(1, 1 / 2)))',
-            '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 1 / 6), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 1 / 2)]');
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, 0.5), new Vector(1, 0.5)))',
+            '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 1 / 6), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 0.5)]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(Vector.Origin, Vector.X))',
             '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 0), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 2 / 3)]');
         tester.test(
-            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, -1 / 2), new Vector(1, -1 / 2)))',
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, -0.5), new Vector(1, -0.5)))',
             '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), -1 / 6), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 5 / 6)]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithStraightLine(new StraightLine(new Vector(0, -1), new Vector(1, -1)))',
@@ -492,33 +492,47 @@
             '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), -2 / 3), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 4 / 3)]');
 
         // PolyCurve.getIntersectionsWithArc()
-        // TODO
+        tester.test(
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithArc(new Arc(new Vector(1, 3), 1, 0, Math.PI, false))',
+            '[]');
+        tester.test(
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithArc(new Arc(new Vector(1, 3), 2, 0, Math.PI, false))',
+            '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 1 / 3)]');
+        tester.test(
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithArc(new Arc(new Vector(1, 3), Math.sqrt(10), 0, Math.PI, false))',
+            '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 0), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 2 / 3)]');
+        tester.test(
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithArc(new Arc(new Vector(1, 3), Math.sqrt(20), 0, Math.PI, false))',
+            '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), -1 / 3), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 1)]');
+        tester.test(
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).getIntersectionsWithArc(new Arc(new Vector(1, 3), Math.sqrt(34), 0, Math.PI, false))',
+            '[new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), -2 / 3), new PointOnCurve(PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]), 4 / 3)]');
 
         // PolyCurve.split()
         tester.test(
-            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(-1 / 2)',
-            '[PolyCurve.fromPoints([Vector.Origin, new Vector(-1 / 2, -1 / 2)]), PolyCurve.fromPoints([new Vector(-1 / 2, -1 / 2), new Vector(1, 1)])]');
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(-0.5)',
+            '[PolyCurve.fromPoints([Vector.Origin, new Vector(-0.5, -0.5)]), PolyCurve.fromPoints([new Vector(-0.5, -0.5), new Vector(1, 1)])]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(0)',
             '[PolyCurve.fromPoints([Vector.Origin, Vector.Origin]), PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)])]');
         tester.test(
-            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(1 / 2)',
-            '[PolyCurve.fromPoints([Vector.Origin, new Vector(1 / 2, 1 / 2)]), PolyCurve.fromPoints([new Vector(1 / 2, 1 / 2), new Vector(1, 1)])]');
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(0.5)',
+            '[PolyCurve.fromPoints([Vector.Origin, new Vector(0.5, 0.5)]), PolyCurve.fromPoints([new Vector(0.5, 0.5), new Vector(1, 1)])]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(1)',
             '[PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]), PolyCurve.fromPoints([new Vector(1, 1), new Vector(1, 1)])]');
         tester.test(
-            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(3 / 2)',
-            '[PolyCurve.fromPoints([Vector.Origin, new Vector(3 / 2, 3 / 2)]), PolyCurve.fromPoints([new Vector(3 / 2, 3 / 2), new Vector(1, 1)])]');
+            'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]).split(1.5)',
+            '[PolyCurve.fromPoints([Vector.Origin, new Vector(1.5, 1.5)]), PolyCurve.fromPoints([new Vector(1.5, 1.5), new Vector(1, 1)])]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).split(-1 / 6)',
-            '[PolyCurve.fromPoints([Vector.Origin, new Vector(-1 / 2, -1 / 2)]), PolyCurve.fromPoints([new Vector(-1 / 2, -1 /2), new Vector(1, 1), new Vector(3, -1)])]');
+            '[PolyCurve.fromPoints([Vector.Origin, new Vector(-0.5, -0.5)]), PolyCurve.fromPoints([new Vector(-0.5, -0.5), new Vector(1, 1), new Vector(3, -1)])]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).split(0)',
             '[PolyCurve.fromPoints([Vector.Origin, Vector.Origin]), PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)])]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).split(1 / 6)',
-            '[PolyCurve.fromPoints([Vector.Origin, new Vector(1 / 2, 1 / 2)]), PolyCurve.fromPoints([new Vector(1 / 2, 1 /2), new Vector(1, 1), new Vector(3, -1)])]');
+            '[PolyCurve.fromPoints([Vector.Origin, new Vector(0.5, 0.5)]), PolyCurve.fromPoints([new Vector(0.5, 1 /2), new Vector(1, 1), new Vector(3, -1)])]');
         tester.test(
             'PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1), new Vector(3, -1)]).split(1 / 3)',
             '[PolyCurve.fromPoints([Vector.Origin, new Vector(1, 1)]), PolyCurve.fromPoints([new Vector(1, 1), new Vector(3, -1)])]');
