@@ -224,8 +224,8 @@ function Vector(x, y) {
   this.y_ = y;
 }
 
+Vector.Origin = new Vector(0, 0);
 Vector.X = new Vector(1, 0);
-
 Vector.Y = new Vector(0, 1);
 
 Vector.prototype.toString = function() {
@@ -303,13 +303,13 @@ Vector.prototype.rotate = function(theta) {
   } else if (theta === -Math.PI / 2) {
     return new Vector(this.y_, -this.x_);
   } else if (theta === 0) {
-    return new Vector(this.x_, this.y_);
+    return this;
   } else if (theta === Math.PI / 2) {
     return new Vector(-this.y_, this.x_);
   }
   var cosTheta = Math.cos(theta);
   var sinTheta = Math.sin(theta);
- return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
+  return new Vector(this.x_ * cosTheta - this.y_ * sinTheta, this.x_ * sinTheta + this.y_ * cosTheta);
 }
 
 
@@ -366,8 +366,8 @@ PointOnCurve.prototype.getParameter = function() {
 
 // Directed
 function StraightLine(start, end) {
-  assert(isVector(start));
-  assert(isVector(end));
+  assert(isVector(start), 'Start of StraightLine must be a vector');
+  assert(isVector(end, 'End of StraightLine must be a vector'));
   assert(start.isFinite() && end.isFinite());
   this.start_ = start;
   this.end_ = end;
@@ -443,7 +443,7 @@ StraightLine.prototype.getIntersectionsWithCurve = function(curve) {
 };
 
 StraightLine.prototype.split = function(t) {
-  assert(isFiniteNumber(t));
+  assert(isFiniteNumber(t), 'Parameter to StraightLine.split() must be a finite number but was ' + t);
   var splitPoint = this.getPointAtParameter(t);
   return [new StraightLine(this.start_, splitPoint), new StraightLine(splitPoint, this.end_)];
 };
@@ -674,8 +674,9 @@ Intersections.Intersection_.prototype.type = function() {
 // TODO: Make this private
 function PolyCurve(curves) {
   assert(isArray(curves));
+  assert(curves.length > 0, 'PolyCurve must have at least one curve');
   for (var i = 0; i < curves.length - 1; ++i) {
-    assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)));
+    assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)), 'Curves must meet to build PolyCurve');
   }
   this.curves_ = curves;
   this.startParameters_ = [];
@@ -699,10 +700,6 @@ PolyCurve.fromPoints = function(points) {
 
 PolyCurve.prototype = Object.create(Curve.prototype);
 
-PolyCurve.prototype.getCurves = function() {
-  return this.curves_.slice();
-};
-
 PolyCurve.prototype.toString = function() {
   return "[" + this.curves_.map(function(curve) { return curve.toString(); }).join(", ") + "]";
 };
@@ -723,10 +720,15 @@ PolyCurve.prototype.equals = function(other) {
   return true;
 };
 
+PolyCurve.prototype.getCurves = function() {
+  return this.curves_.slice();
+};
+
 PolyCurve.prototype.getParameter_ = function(index, localParameter) {
   return interpolate(this.startParameters_[index], this.startParameters_[index + 1], localParameter);
 };
 
+// Local index is in [0, 1), except for first and last curves.
 PolyCurve.prototype.getIndexAndLocalParameter_ = function(t) {
   assert(isNumber(t));
   var index = 0;
@@ -915,7 +917,7 @@ PolyCurve.prototype.getIntersections_ = function(intersectionMethodName, otherCu
     var isFirstCurve = (indexAndIntersection.index === 0);
     var isLastCurve = (indexAndIntersection.index === this.curves_.length - 1);
     var parameter = indexAndIntersection.intersection.getParameter();
-    return isInZeroOne(parameter) || (isFirstCurve && (parameter < 0)) || (isLastCurve && (parameter > 1));
+    return (parameter >= 0 && parameter < 1) || (isFirstCurve && (parameter < 1)) || (isLastCurve && (parameter >= 0));
   }.bind(this)).map(function(indexAndIntersection) {
     return new PointOnCurve(this, this.getParameter_(indexAndIntersection.index, indexAndIntersection.intersection.getParameter()));
   }.bind(this));
@@ -941,26 +943,20 @@ PolyCurve.prototype.getIntersectionsWithCurve = function(curve) {
 
 PolyCurve.prototype.split = function(t) {
   var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
-  var splitCurve = this.curves_[indexAndLocalParameter.index].split(indexAndLocalParameter.parameter);
-  switch (indexAndLocalParameter.index) {
-    case 0:
+  if (indexAndLocalParameter.localParameter === 0 && indexAndLocalParameter.index !== 0) {
       return [
-        splitCurve[0],
-        new PolyCurve([splitCurve[1]].concat(this.curves_.slice(1)))
-      ];
-    case indexAndLocalParameter.index - 1:
-      return [
-        new PolyCurve(this.curves_.slice(0, indexAndLocalParameter.index).concat(splitCurve[0])),
-        splitCurve[1],
-      ];
-    default:
-      return [
-        new PolyCurve(this.curves_.slice(0, splitCurve.index).concat(splitCurve[0])),
-        new PolyCurve([splitCurve[1]].concat(this.curves_.slice(indexAndLocalParameter.index + 1)))
+        new PolyCurve(this.curves_.slice(0, indexAndLocalParameter.index)),
+        new PolyCurve(this.curves_.slice(indexAndLocalParameter.index))
       ];
   }
+  var splitCurve = this.curves_[indexAndLocalParameter.index].split(indexAndLocalParameter.localParameter);
+  return [
+    new PolyCurve(this.curves_.slice(0, indexAndLocalParameter.index).concat(splitCurve[0])),
+    new PolyCurve([splitCurve[1]].concat(this.curves_.slice(indexAndLocalParameter.index + 1)))
+  ];
 };
 
+// At vertices, takes the angle of the outgoing curve.
 PolyCurve.prototype.getAngleAtParameter = function(t) {
   var indexAndLocalParameter = this.getIndexAndLocalParameter_(t);
   return this.curves_[indexAndLocalParameter.index].getAngleAtParameter(indexAndLocalParameter.localParameter);
