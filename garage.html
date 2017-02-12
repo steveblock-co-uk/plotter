@@ -21,7 +21,7 @@ console.log(ground.toString());
         var parameterStep = step / ground.length();
         var axlesLine = ground.shiftOrthogonal(this.wheelRadius_);
 console.log(axlesLine.toString());
-        var xZero = new StraightLine(new Vector(0, -Infinity), new Vector(0, Infinity));
+        var xZero = new StraightLine(Vector.Origin, Vector.Y);
         var heights = {};
         for (var parameter = 0; parameter <= 1; parameter += parameterStep) {
 console.log('parameter', parameter);
@@ -102,14 +102,14 @@ console.log(roofIntersection.toString());
           {y: 15 * thickness + 19, east: 3695},
         ];
         var driveway = PolyCurve.fromPoints(data.map(function(entry) {
-          return new Vector(Math.max(valueOrMinusInfinity(entry.west), valueOrMinusInfinity(entry.centre), valueOrMinusInfinity(entry.east)), entry.y);
+          return new Vector(Math.min(valueOrInfinity(entry.west), valueOrInfinity(entry.centre), valueOrInfinity(entry.east)), entry.y);
         }));
         var campervan = new Vehicle(4000, 300, 1900);
         console.log(campervan.traverse(driveway, 100));
       }
 
-      function valueOrMinusInfinity(x) {
-        return x === undefined ? -Infinity : x;
+      function valueOrInfinity(x) {
+        return x === undefined ? Infinity : x;
       }
 
     </script>

@@ -368,7 +368,7 @@ PointOnCurve.prototype.getParameter = function() {
 function StraightLine(start, end) {
   assert(isVector(start), 'Start of StraightLine must be a vector');
   assert(isVector(end, 'End of StraightLine must be a vector'));
-  assert(start.isFinite() && end.isFinite());
+  assert(start.isFinite() && end.isFinite(), 'Start and end of StraightLine must be finite: ' + start.toString() + ' ' + end.toString());
   this.start_ = start;
   this.end_ = end;
 };
@@ -676,7 +676,7 @@ function PolyCurve(curves) {
   assert(isArray(curves));
   assert(curves.length > 0, 'PolyCurve must have at least one curve');
   for (var i = 0; i < curves.length - 1; ++i) {
-    assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)), 'Curves must meet to build PolyCurve');
+    assert(curves[i].getPointAtParameter(1).equals(curves[i + 1].getPointAtParameter(0)), 'Curves must meet to build PolyCurve: ' + curves[i].getPointAtParameter(1).toString() + ' vs ' + curves[i + 1].getPointAtParameter(0).toString() + ' at index ' + i);
   }
   this.curves_ = curves;
   this.startParameters_ = [];
@@ -899,7 +899,6 @@ PolyCurve.prototype.shiftOrthogonal = function(distance) {
   if (!isDoneEarly) {
     result.push(shiftedCurvesWithArcs[shiftedCurvesWithArcs.length - 1].curve);
   }
-
   return new PolyCurve(result);
 };
 
