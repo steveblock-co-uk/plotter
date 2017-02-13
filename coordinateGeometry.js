@@ -564,13 +564,16 @@ Arc.prototype.getIntersectionsWithArc = function(arc) {
   var distanceBetweenCentres = centreToPoint.magnitude();
 
   var overlap = this.radius_ + d - distanceBetweenCentres;
-  if (overlap < 0)
+  if (overlap < 0 || overlap > (2 * this.radius_)) {
     return [];
+  }
   var thetaToPoint = centreToPoint.angle();
   var thetas;
-  if (overlap === 0)
+  if (overlap === 0) {
     thetas = [thetaToPoint];
-  else {
+  } else if (overlap === (2 * this.radius_)) {
+    thetas = [thetaToPoint + Math.PI];
+  } else {
     var halfAngle = calculateTriangleAngle(d, distanceBetweenCentres, this.radius_);
     thetas = [thetaToPoint - halfAngle, thetaToPoint + halfAngle];
   }
