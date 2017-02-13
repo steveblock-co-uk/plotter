@@ -105,7 +105,7 @@ function interpolate(start, end, t) {
 
 // Exclusive at zero, inclusive at two pi.
 function toZeroTwoPi(x) {
-  assert(isFiniteNumber(x));
+  assert(isFiniteNumber(x), 'Argument must be finite number, was ' + x);
   var y = x % (2 * Math.PI);
   return y > 0 ? y : y + 2 * Math.PI;
 }

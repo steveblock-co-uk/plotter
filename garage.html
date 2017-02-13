@@ -15,26 +15,20 @@
       // Traverses the ground and returns the roof height at x=0 at each step.
       // Assumes that the ground runs in the direction of increasing x.
       Vehicle.prototype.traverse = function(ground, step) {
-console.log(ground.toString());
-        console.assert(ground instanceof Curve);
-        console.assert(ground.getPointAtParameter(0) < ground.getPointAtParameter(1));
+        assert(ground instanceof Curve);
+        assert(ground.getPointAtParameter(0) < ground.getPointAtParameter(1));
+        var axlesLocus = ground.shiftOrthogonal(this.wheelRadius_);
         var parameterStep = step / ground.length();
-        var axlesLine = ground.shiftOrthogonal(this.wheelRadius_);
-console.log(axlesLine.toString());
         var xZero = new StraightLine(Vector.Origin, Vector.Y);
-        var heights = {};
+        var heights = [];
         for (var parameter = 0; parameter <= 1; parameter += parameterStep) {
-console.log('parameter', parameter);
-          var rearAxlePosition = axlesLine.getPointAtParameter(parameter);
-console.log('rear axle', rearAxlePosition.toString());
-          var frontAxleIntersections = axlesLine
+          var rearAxlePosition = axlesLocus.getPointAtParameter(parameter);
+          var frontAxleIntersections = axlesLocus
               .getIntersectionsWithArc(new Arc(rearAxlePosition, this.wheelbase_, 0, 0, false))
               .filter(function(intersection) {
-            return isInZeroOne(intersection.getParameter());
+            return isInZeroOne(intersection.getParameter()) && intersection.getParameter() > parameter;
           });
-console.log(frontAxleIntersections.map(function(i) { return i.toString(); }));
           if (frontAxleIntersections.length === 0) {
-console.log('End of road');
             // We've run out of road
             break;
           }
@@ -44,14 +38,12 @@ console.log('End of road');
           console.assert(frontAxleIntersections.length === 1);
           var frontAxlePosition = frontAxleIntersections[0].asVector();
           var axlesLine = new StraightLine(rearAxlePosition, frontAxlePosition);
-console.log(axlesLine.toString());
           var roof = axlesLine.shiftOrthogonal(this.axlesToRoof_);
           var roofIntersections = roof.getIntersectionsWithStraightLine(xZero);
           console.assert(roofIntersections.length === 1);
           var roofIntersection = roofIntersections[0];
-console.log(roofIntersection.toString());
           // TODO: Use floor height
-          heights[parameter] = isInZeroOne(roofIntersection.getParameter()) ? roofIntersection.asVector().getY() : 0;
+          heights.push(isInZeroOne(roofIntersection.getParameter()) ? roofIntersection.asVector().getY() : 0);
         }
         return heights;
       };
@@ -79,7 +71,7 @@ console.log(roofIntersection.toString());
         // offset east: 3100
         var thickness = 614 / 15;
         var data = [
-          {y: 0, east: -10000},
+          {y: 0, east: -4000},
           {y: 0, east: 0},
           {y: 20, east: 120},
           {y: 33, centre: 150},
@@ -104,8 +96,12 @@ console.log(roofIntersection.toString());
         var driveway = PolyCurve.fromPoints(data.map(function(entry) {
           return new Vector(Math.min(valueOrInfinity(entry.west), valueOrInfinity(entry.centre), valueOrInfinity(entry.east)), entry.y);
         }));
-        var campervan = new Vehicle(4000, 300, 1900);
-        console.log(campervan.traverse(driveway, 100));
+        var height = 1900;
+        var campervan = new Vehicle(3000, 300, height);
+        var heights = campervan.traverse(driveway, 10);
+        var minClearance = heights.reduce(function(a, b) { return Math.max(a, b); }, 0);
+        console.log('Min clearance', minClearance);
+        console.log('Extra height', minClearance - height);
       }
 
       function valueOrInfinity(x) {
