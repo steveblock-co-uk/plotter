@@ -2,6 +2,7 @@
 // Ignore non-numerics in data
 // Force axis tick at zero
 // Draw axis zero in solid line
+// Add option to force equal scale
 
 function arrayMin(x) {
   var result = x[0];

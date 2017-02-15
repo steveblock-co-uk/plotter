@@ -318,6 +318,7 @@ Vector.prototype.rotate = function(theta) {
 // outside the length of the curve. Parameters can be infinite.
 function Curve() {}
 
+// TODO: We should inherit from CurveVisitable too, but all methods are virtual.
 Curve.prototype = Object.create(StringHashable.prototype);
 
 Curve.prototype.getPointAtParameter = virtualMethod;
@@ -460,6 +461,12 @@ StraightLine.prototype.length = function() {
 StraightLine.prototype.delta = function() {
   return this.end_.subtract(this.start_);
 };
+
+StraightLine.prototype.visit = function(visitor) {
+  assert(visitor instanceof CurveVisitor);
+  visitor.onVisitStraightLine(this);
+};
+
 
 // Theta is zero at the +ve x axis, increasing anti-clockwise, in radians.
 function Arc(centre, radius, startTheta, endTheta, reverse) {
@@ -616,6 +623,12 @@ Arc.prototype.getAngleAtParameter = function(t) {
 Arc.prototype.length = function() {
   return Math.abs(this.endTheta_ - this.startTheta_) * this.radius_;
 };
+
+Arc.prototype.visit = function(visitor) {
+  assert(visitor instanceof CurveVisitor);
+  visitor.onVisitArc(this);
+};
+
 
 function Intersections() {
 }
@@ -970,6 +983,11 @@ PolyCurve.prototype.length = function() {
   }, 0);
 };
 
+PolyCurve.prototype.visit = function(visitor) {
+  assert(visitor instanceof CurveVisitor);
+  visitor.onVisitPolyCurve(this);
+};
+
 // TODO: Make lcoal?
 // Start inclusive, end exclusive
 function lengthOfCurves(curves, startIndex, endIndex) {
@@ -987,3 +1005,13 @@ function distanceAlongCurves(curves, leftIndex, rightIndex, leftParameter, right
 function isInternal(intersection) {
   return intersection.type() === Intersections.TYPE_INTERNAL;
 }
+
+function Visitable() {}
+
+Visitable.prototype.visit = virtualMethod;
+
+function CurveVisitor() {}
+
+CurveVisitor.prototype.onVisitStraightLine = virtualMethod;
+CurveVisitor.prototype.onVisitArc = virtualMethod;
+CurveVisitor.prototype.onVisitPolyCurve = virtualMethod;
