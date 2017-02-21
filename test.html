@@ -29,7 +29,7 @@
         tester.test('calculateAxisRange(new Range(0, 50))', '{min_: 0, max_: 50}');
         tester.test('calculateAxisRange(new Range(0, 51))', '{min_: 0, max_: 60}');
         tester.test('calculateAxisRange(new Range(0, 60))', '{min_: 0, max_: 60}');
-        tester.test('calculateAxisRange(new Range(0, 61))', '{min_: 0, max_: 80}');
+        tester.test('calculateAxisRange(new Range(0, 61))', '{min_: 0, max_: 70}');
         tester.test('calculateAxisRange(new Range(0, 80))', '{min_: 0, max_: 80}');
         tester.test('calculateAxisRange(new Range(0, 81))', '{min_: 0, max_: 100}');
         tester.test('calculateAxisRange(new Range(0, 100))', '{min_: 0, max_: 100}');
@@ -50,9 +50,9 @@
         tester.test('calculateAxisRange(new Range(-1, 100))', '{min_: -20, max_: 100}');
 
         // Intervals
-        tester.test('calculateAxisTick(5)', '0.5');
-        tester.test('calculateAxisTick(10)', '1');
-        tester.test('calculateAxisTick(12)', '2');
+        tester.test('getMultiple(5)', '1');
+        tester.test('getMultiple(10)', '2');
+        tester.test('getMultiple(12)', '2');
 
         // Clipping
         // Outside

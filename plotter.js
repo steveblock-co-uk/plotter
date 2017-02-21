@@ -18,12 +18,19 @@ function arrayMax(x) {
   }
   return result;
 }
+
 function getMultiple(x) {
+  var order = calculateOrder(x);
+  var value = x / order;
+  return getOrderImpl(value) * order;
+}
+
+function getOrderImpl(x) {
   if (x < 1 || x > 10) {
     throw new Error('Out of range: ' + x);
   }
   // Purely empirical
-  if (x > 6) {
+  if (x > 7) {
     return 2;
   }
   if (x > 4) {
@@ -34,6 +41,7 @@ function getMultiple(x) {
   }
   return 0.2;
 }
+
 function roundToMultiple(x, multiple, roundUp) {
   var isPositive = x > 0;
   fraction = Math.abs(x) / multiple;
@@ -55,10 +63,7 @@ function calculateAxisRange(dataRange, forceZero) {
   if (forceZero) {
     localDataRange.expand(0);
   }
-  var order = calculateOrder(localDataRange.range());
-  var value = localDataRange.range() / order;
-  var baseMultiple = getMultiple(value);
-  var multiple = baseMultiple * order
+  var multiple = getMultiple(localDataRange.range());
   return new Range(roundToMultiple(localDataRange.min(), multiple, false),
                    roundToMultiple(localDataRange.max(), multiple, true));
 }
@@ -70,21 +75,6 @@ function calculatePowerOfTen(x) {
 }
 function calculateOrder(x) {
   return Math.pow(10, calculatePowerOfTen(x));
-}
-function calculateAxisTick(axisRange) {
-  var order = calculateOrder(axisRange);
-  var value = axisRange / order;
-  var interval;
-  if (value > 5) {
-    interval = 1;
-  } else if (value > 2) {
-    interval = 0.5;
-  } else if (value > 1) {
-    interval = 0.2;
-  } else {
-    interval = 0.1;
-  }
-  return interval * order;
 }
 // Inclusive wrt end points of input line and of horizontal/vertical line.
 function intersectHorizontalLine(x1, y1, x2, y2, value, start, end) {
@@ -485,7 +475,7 @@ Plot.prototype.setXAxisRange_ = function(range) {
     return;
   }
   var effectiveRange = range ? range : calculateAxisRange(this.xRange_, this.forceXAxisZero_);
-  var tick = calculateAxisTick(effectiveRange.range());
+  var tick = getMultiple(effectiveRange.range());
   this.axes_.setXValues(effectiveRange, tick);
 };
 Plot.prototype.setYAxisRange_ = function(range) {
@@ -494,7 +484,7 @@ Plot.prototype.setYAxisRange_ = function(range) {
     return;
   }
   var effectiveRange = range ? range : calculateAxisRange(this.yRange_, this.forceYAxisZero_);
-  var tick = calculateAxisTick(effectiveRange.range());
+  var tick = getMultiple(effectiveRange.range());
   this.axes_.setYValues(effectiveRange, tick);
 };
 // Clips to plot rect.
