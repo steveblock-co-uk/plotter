@@ -16,14 +16,14 @@
 
       // Traverses the ground and returns the roof height at x=0 at each step.
       // Assumes that the ground runs in the direction of increasing x.
-      Vehicle.prototype.traverse = function(ground, step, curvePlotter) {
+      Vehicle.prototype.traverse = function(ground, doorXCoordinate, step, curvePlotter) {
         assert(ground instanceof Curve);
         assert(ground.getPointAtParameter(0) < ground.getPointAtParameter(1));
         var axlesLocus = ground.shiftOrthogonal(this.wheelRadius_);
         curvePlotter.plot(ground);
         curvePlotter.plot(axlesLocus, {lineColor: 'gray'});
         var parameterStep = step / ground.length();
-        var xZero = new StraightLine(Vector.Origin, Vector.Y);
+        var door = new StraightLine(new Vector(doorXCoordinate, 0), new Vector(doorXCoordinate, 1));
         var heights = [];
         for (var parameter = 0; parameter <= 1; parameter += parameterStep) {
           var rearAxlePosition = axlesLocus.getPointAtParameter(parameter);
@@ -45,7 +45,7 @@
           var roof = axlesLine.shiftOrthogonal(this.axlesToRoof_);
           curvePlotter.plot(axlesLine, {lineColor: 'blue'});
           curvePlotter.plot(roof, {lineColor: 'red'});
-          var roofIntersections = roof.getIntersectionsWithStraightLine(xZero);
+          var roofIntersections = roof.getIntersectionsWithStraightLine(door);
           console.assert(roofIntersections.length === 1);
           var roofIntersection = roofIntersections[0];
           // TODO: Use floor height
@@ -56,7 +56,7 @@
 
       function go() {
         // All in mm.
-        // track: 1700
+        // track: 1740
         // offset: 600
         var oldData = [
           {y: 43, x: 140},
@@ -76,8 +76,9 @@
         // offset centre: 1300
         // offset east: 3100
         var thickness = 614 / 15;
+        var xStart = -3000;
         var data = [
-          {y: 0, east: -4000},
+          {y: 0, east: xStart},
           {y: 0, east: 0},
           /* {y: 20, east: 120}, */
           /* {y: 33, centre: 150}, */
@@ -99,21 +100,32 @@
           {y: 15 * thickness, east: 3530},
           {y: 15 * thickness + 19, east: 3695},
         ];
+        var campervanHeight = Math.max((1949 + 1947) / 2, 1958, (1978 + 1986) / 2, (1970 + 1990) / 2, (1975 + 1992) / 2, (1975 + 1976) / 2);  // Measured
+        //var campervanHeight = 78 * 25.4;  // http://www.gowesty.com/tech-article-details.php?id=24
+        var doorHeight = 2112;  // Worst-case for centre line of campervan
+        var doorXCoordinate = 45;
+        var wheelbase = 2920;
+        var wheelRadius = 300;  // Measured
+
         var driveway = PolyCurve.fromPoints(data.map(function(entry) {
           return new Vector(Math.min(valueOrInfinity(entry.west), valueOrInfinity(entry.centre), valueOrInfinity(entry.east)), entry.y);
         }));
-        plot = new Plot(8000 / 5, 2500 / 5);
+        plot = new Plot(7000 / 5, 3000 / 5);
         plot.setGridOn(true);
         plot.setHoldOn(true);
         document.body.appendChild(plot.canvas());
-        var height = 1900;
-        var campervan = new Vehicle(3000, 300, height);
+        var campervan = new Vehicle(wheelbase, wheelRadius, campervanHeight);
+        var opening = PolyCurve.fromPoints([new Vector(xStart, doorHeight), new Vector(doorXCoordinate, doorHeight), new Vector(doorXCoordinate, 3000)]);
         var curvePlotter = new CurvePlotter(plot);
-        var heights = campervan.traverse(driveway, 100, curvePlotter);
-        var minClearance = heights.reduce(function(a, b) { return Math.max(a, b); }, 0);
-console.log(heights);
-        console.log('Min clearance', minClearance);
-        console.log('Extra height', minClearance - height);
+        curvePlotter.plot(opening);
+        var heights = campervan.traverse(driveway, 20, 100, curvePlotter);
+        var maxHeight = heights.reduce(function(a, b) { return Math.max(a, b); }, 0);
+
+        console.log('Campervan height', Math.ceil(campervanHeight));
+        console.log('Extra height', Math.ceil(maxHeight - campervanHeight));
+        console.log('Max height', Math.ceil(maxHeight));
+        console.log('Door height', Math.floor(doorHeight));
+        console.log('Clearance', Math.floor(doorHeight - maxHeight));
       }
 
       function valueOrInfinity(x) {
