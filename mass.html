@@ -119,6 +119,12 @@
             timestamp: '2017/02/23 15:00',
             scale: 'Pediatrician',
             totalMassGrams: 5760
+          },
+          {
+            timestamp: '2017/03/02 16:00',
+            scale: kWestVan,
+            totalMassGrams: 5937,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
           }
         ];
         var danielData = [
@@ -607,7 +613,7 @@
         });
 
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
-        plot.setAxisRanges(new Range(0, 3), new Range(3, 6));
+        plot.setAxisRanges(new Range(0, 4), new Range(3, 7));
       }
 
       function toHex(x, width) {
