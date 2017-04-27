@@ -34,11 +34,20 @@
         }.bind(this)) ];
       };
 
+      function SingleSpeedDrivetrain(chainring, sprocket) {
+        this.chainring_ = chainring;
+        this.sprocket_ = sprocket;
+      }
+      SingleSpeedDrivetrain.prototype = Object.create(Drivetrain.prototype);
+      SingleSpeedDrivetrain.prototype.gearRatios = function() {
+        return [ [ this.chainring_ / this.sprocket_ ] ];
+      };
+
       function DrivetrainPlotter(plot, bike, offset, color) {
         var gearRatios = bike.gearRatios();
         var yData = [offset];
         for (var i = 1; i < gearRatios.length; ++i) {
-          yData[i] = offset + i / (gearRatios.length - 1);
+          yData[i] = offset + i / (2 * (gearRatios.length - 1));
         }
         for (var i = 0; i < gearRatios.length; ++i) {
           var y = gearRatios[i].map(function() { return yData[i]; });
@@ -55,19 +64,20 @@
         plot.setHoldOn(true);
         document.body.appendChild(plot.canvas());
 
-        var commuterBike = new ChainDrivetrain([28, 38, 48], [12, 14, 16, 18, 21, 24, 28, 32]);
-        var roadBike = new ChainDrivetrain([34, 50], [12, 13, 14, 15, 17, 19, 21, 24, 27]);
-        var crossBike = new ChainDrivetrain([36, 46], [11, 12, 14, 16, 18, 21, 24, 28, 32]);
+        var indie = new ChainDrivetrain([28, 38, 48], [12, 14, 16, 18, 21, 24, 28, 32]);
+        var allez = new ChainDrivetrain([34, 50], [12, 13, 14, 15, 17, 19, 21, 24, 27]);
+        var threshold = new ChainDrivetrain([36, 46], [11, 12, 14, 16, 18, 21, 24, 28, 32]);
+        var rxs = new SingleSpeedDrivetrain(50, 22);
         // https://www.shandcycles.com/rohloff-bikes/
         // https://www.rohloff.de/en/technology/workshop/sprocket-ratios/index.html
         var stoater = new GearedHubDrivetrain(50, 17, [0.279, 0.316, 0.360, 0.409, 0.464, 0.528, 0.600, 0.682, 0.774, 0.881, 1.000, 1.135, 1.292, 1.467]);
 
-        new DrivetrainPlotter(plot, commuterBike, 1, 'black');
-        new DrivetrainPlotter(plot, roadBike, 3, 'green');
-        new DrivetrainPlotter(plot, crossBike, 5, 'blue');
-        new DrivetrainPlotter(plot, stoater, 7, 'red');
+        new DrivetrainPlotter(plot, indie, 1, 'black');
+        new DrivetrainPlotter(plot, allez, 2, 'green');
+        new DrivetrainPlotter(plot, threshold, 3, 'blue');
+        new DrivetrainPlotter(plot, rxs, 4, 'red');
 
-        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 9));
+        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 5));
       }
     </script>
   </head>
