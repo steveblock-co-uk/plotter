@@ -324,9 +324,11 @@ Axes.prototype.draw = function(context, rect) {
 };
 
 /////////////////////////////////////////////////////////////////////////
-function Plot(width, height) {
+function Plot(width, height, legendWidth, legendHeight) {
   this.width_ = width;
   this.height_ = height;
+  this.legendWidth_ = legendWidth;
+  this.legendHeight_ = legendHeight;
   this.forceXAxisZero_ = false;
   this.forceYAxisZero_ = false;
   this.xAxisRangeForced_ = false;
@@ -335,9 +337,13 @@ function Plot(width, height) {
   this.axes_ = new Axes();
   this.clearData_();
   this.createCanvas_();
+  this.createLegendCanvas_();
   var plotSize = 0.8;
   this.plotRect_ = new Rect(width * (1 - plotSize) / 2, height * (1 - plotSize) / 2, width * plotSize, height * plotSize);
 }
+Plot.prototype.legendCanvas = function() {
+  return this.legendCanvas_;
+};
 Plot.prototype.canvas = function() {
   return this.canvas_;
 };
@@ -363,6 +369,15 @@ Plot.prototype.createCanvas_ = function() {
   this.canvas_.height = this.height_;
   this.context_ = this.canvas_.getContext('2d');
 };
+Plot.prototype.createLegendCanvas_ = function() {
+  if (typeof this.legendHeight_ !== 'number' || typeof this.legendWidth_ !== 'number') {
+    return;
+  }
+  this.legendCanvas_ = document.createElement('canvas');
+  this.legendCanvas_.width = this.legendWidth_;
+  this.legendCanvas_.height = this.legendHeight_;
+  this.legendContext_ = this.legendCanvas_.getContext('2d');
+};
 Plot.applyStyleDefaults = function(style) {
   if (typeof style !== 'object') {
     style = {};
@@ -387,7 +402,7 @@ Plot.applyStyleDefaults = function(style) {
   }
   return style;
 };
-Plot.prototype.plot = function(x, y, style) {
+Plot.prototype.plot = function(x, y, style, name) {
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
   }
@@ -396,7 +411,7 @@ Plot.prototype.plot = function(x, y, style) {
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle, style.markerColors);
+  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle, style.markerColors, name);
   if (!this.xAxisRangeForced_) {
     this.setXAxisRange_();
   }
@@ -404,6 +419,7 @@ Plot.prototype.plot = function(x, y, style) {
     this.setYAxisRange_();
   }
   this.redraw_();
+  this.redrawLegend_();
 };
 function getLineDash(shorthand) {
   switch(shorthand) {
@@ -471,8 +487,34 @@ Plot.prototype.redraw_ = function() {
     }
   }
 };
-Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors) {
-  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors});
+Plot.prototype.redrawLegend_ = function(x, y, lineColor, markers, lineStyle, markerColors) {
+  if (this.legendCanvas_ === undefined) {
+    return;
+  }
+  this.legendContext_.clearRect(0, 0, this.legendWidth_, this.legendHeight_);
+  var fontHeight = 8;
+  var filteredDataSeries = this.dataSeries_.filter(function(d) {
+    return typeof d.name === 'string';
+  });
+  if (filteredDataSeries.length === 0) {
+    return;
+  }
+  for (var i = 0; i < filteredDataSeries.length; i++ ) {
+    var data = filteredDataSeries[i];
+    this.legendContext_.strokeStyle = data.lineColor;
+    this.legendContext_.setLineDash(getLineDash(data.lineStyle));
+    this.legendContext_.beginPath();
+    this.legendContext_.moveTo(10, fontHeight * 1.2 * (i + 0.5) + 10);
+    this.legendContext_.lineTo(20, fontHeight * 1.2 * (i + 0.5) + 10);
+    this.legendContext_.fillText(data.name, 30, fontHeight * 1.2 * (i + 1) + 10);
+    this.legendContext_.stroke();
+  }
+  this.legendContext_.strokeStyle = 'black';
+  this.legendContext_.setLineDash([]);
+  this.legendContext_.strokeRect(0, 0, this.legendWidth_, fontHeight * 1.2 * filteredDataSeries.length + 20);
+};
+Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors, name) {
+  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors, name: name});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
   this.yRange_.expand(arrayMin(y));

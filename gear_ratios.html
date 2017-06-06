@@ -43,7 +43,7 @@
         return [ [ this.chainring_ / this.sprocket_ ] ];
       };
 
-      function DrivetrainPlotter(plot, bike, offset, color) {
+      function DrivetrainPlotter(plot, bike, offset, color, name) {
         var gearRatios = bike.gearRatios();
         var yData = [];
         for (var i = 0; i < gearRatios.length; ++i) {
@@ -54,15 +54,16 @@
           plot.plot(gearRatios[i], y, {
             lineColor: color,
             markers: '.',
-          });
+          }, i === 0 ? name : undefined);
         }
       }
 
       function go() {
-        var plot = new Plot(1400, 700);
+        var plot = new Plot(1400, 700, 100, 100);
         plot.setGridOn(true);
         plot.setHoldOn(true);
         document.body.appendChild(plot.canvas());
+        document.body.appendChild(plot.legendCanvas());
 
         var indie = new ChainDrivetrain([28, 38, 48], [12, 14, 16, 18, 21, 24, 28, 32]);
         var allez = new ChainDrivetrain([34, 50], [12, 13, 14, 15, 17, 19, 21, 24, 27]);
@@ -72,14 +73,23 @@
         // https://www.rohloff.de/en/technology/workshop/sprocket-ratios/index.html
         var stoater = new GearedHubDrivetrain(50, 17, [0.279, 0.316, 0.360, 0.409, 0.464, 0.528, 0.600, 0.682, 0.774, 0.881, 1.000, 1.135, 1.292, 1.467]);
 
-        new DrivetrainPlotter(plot, indie, 0, 'black');
-        new DrivetrainPlotter(plot, allez, 1, 'green');
-        new DrivetrainPlotter(plot, threshold, 2, 'blue');
-        new DrivetrainPlotter(plot, rxs, 3, 'red');
+        new DrivetrainPlotter(plot, indie, 0, 'black', 'Indie');
+        new DrivetrainPlotter(plot, allez, 1, 'green', 'Allez');
+        new DrivetrainPlotter(plot, threshold, 2, 'blue', 'Threshold');
+        new DrivetrainPlotter(plot, rxs, 3, 'red', 'RXS');
 
         plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 4));
       }
     </script>
+    <style type="text/css">
+      canvas {
+        position: absolute;
+      }
+      canvas ~ canvas {
+        left: 170px;
+        top: 100px;
+      }
+    </style>
   </head>
   <body onload="go();">
   <body>
