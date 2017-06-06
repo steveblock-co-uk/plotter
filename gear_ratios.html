@@ -45,9 +45,9 @@
 
       function DrivetrainPlotter(plot, bike, offset, color) {
         var gearRatios = bike.gearRatios();
-        var yData = [offset];
-        for (var i = 1; i < gearRatios.length; ++i) {
-          yData[i] = offset + i / (2 * (gearRatios.length - 1));
+        var yData = [];
+        for (var i = 0; i < gearRatios.length; ++i) {
+          yData[i] = offset + (i + 1) / (gearRatios.length + 1);
         }
         for (var i = 0; i < gearRatios.length; ++i) {
           var y = gearRatios[i].map(function() { return yData[i]; });
@@ -72,12 +72,12 @@
         // https://www.rohloff.de/en/technology/workshop/sprocket-ratios/index.html
         var stoater = new GearedHubDrivetrain(50, 17, [0.279, 0.316, 0.360, 0.409, 0.464, 0.528, 0.600, 0.682, 0.774, 0.881, 1.000, 1.135, 1.292, 1.467]);
 
-        new DrivetrainPlotter(plot, indie, 1, 'black');
-        new DrivetrainPlotter(plot, allez, 2, 'green');
-        new DrivetrainPlotter(plot, threshold, 3, 'blue');
-        new DrivetrainPlotter(plot, rxs, 4, 'red');
+        new DrivetrainPlotter(plot, indie, 0, 'black');
+        new DrivetrainPlotter(plot, allez, 1, 'green');
+        new DrivetrainPlotter(plot, threshold, 2, 'blue');
+        new DrivetrainPlotter(plot, rxs, 3, 'red');
 
-        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 5));
+        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 4));
       }
     </script>
   </head>
