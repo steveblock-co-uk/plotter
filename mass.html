@@ -169,6 +169,11 @@
             timestamp: '2017/10/16 10:00',
             totalMassGrams: 8850,
             nonBabyMassGrams: kShirtMassGrams
+          },
+          {
+            timestamp: '2017/11/30 09:45',
+            totalMassGrams: 9240,
+            nonBabyMassGrams: kDisposableDiaperMassGrams
           }
         ];
         var danielData = [
@@ -662,7 +667,7 @@
         });
 
         plot.setAxisLabels('Age (months)', 'Mass (kg)');
-        plot.setAxisRanges(new Range(0, 12), new Range(3, 10));
+        plot.setAxisRanges(new Range(0, 18), new Range(3, 10));
       }
 
       function toHex(x, width) {
