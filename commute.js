@@ -1,7 +1,5 @@
 // TODO
 // - Plot dates
-// - Add trend line
-// - Add stats
 
 document.head.innerHTML = '';
 document.body.innerHTML = '';
@@ -10,6 +8,60 @@ var x = document.createElement('script');
 x.src = 'https://plotter.steveblock.co.uk/plotter.js';
 x.addEventListener('load', go);
 document.head.appendChild(x);
+
+function sum(a, b) {
+  return a + b;
+}
+
+function bestFit(x, y) {
+  console.assert(x.length == y.length);
+  var xMean = x.reduce(sum, 0) / x.length;
+  var yMean = y.reduce(sum, 0) / y.length;
+  var xDelta = x.map(function(a) { return a - xMean; });
+  var yDelta = y.map(function(a) { return a - yMean; });
+  var cross = 0;
+  for (var i = 0; i < x.length; ++i) {
+    cross += xDelta[i] * yDelta[i];
+  }
+  var square = 0;
+  for (var i = 0; i < x.length; ++i) {
+    square += xDelta[i] * xDelta[i];
+  }
+  var m = cross / square;
+  return {
+    m: m,
+    c: yMean - m * xMean,
+  };
+}
+
+function print(x, multipliers, separator) {
+  var result = '';
+  for (var i = 0; i < multipliers.length - 1; ++i) {
+    x = Math.floor(x / multipliers[i]);
+    var value = x % (multipliers[i + 1]);
+    result = separator + value + result;
+  }
+  if (multipliers.length > 0) {
+    var value = Math.floor(x / multipliers[multipliers.length - 1]);
+    result = value + result;
+  }
+  return result;
+}
+
+function printSecondsAsMinutesSeconds(x) {
+  return print(x, [1, 60], ':');
+}
+
+function tableRow(x, y) {
+  var tr = document.createElement('tr');
+  var td = document.createElement('td');
+  tr.appendChild(td);
+  td.textContent = x;
+  var td = document.createElement('td');
+  td.textContent = y;
+  tr.appendChild(td);
+  return tr;
+}
 
 function go() {
   var r = new XMLHttpRequest();
@@ -38,15 +90,37 @@ function plot() {
       true;
   });
 
+  var millis_2018_03_12_00_00_00_PDT = 1520838000000;
+  var weeksToMillis = 1000 * 60 * 60 * 24 * 7;
+  var weeks = commutes.map(function(commute) { return (commute.beginTimestamp - millis_2018_03_12_00_00_00_PDT) / weeksToMillis; });
+  var seconds = commutes.map(function(commute) { return commute.duration; });
+  var bestFitLine = bestFit(weeks, seconds);
+  var nowWeeks = (new Date().getTime() - millis_2018_03_12_00_00_00_PDT) / weeksToMillis;
+
+  var table = document.createElement('table');
+  table.appendChild(tableRow('Count', weeks.length));
+  table.appendChild(tableRow('Best (mm:ss)', printSecondsAsMinutesSeconds(seconds.reduce(function(a, b) { return Math.min(a, b); }, Infinity))));
+  table.appendChild(tableRow('Weekly delta (s)', Math.round(bestFitLine.m)));
+  table.appendChild(tableRow('Predicted (s)', printSecondsAsMinutesSeconds(bestFitLine.m * nowWeeks + bestFitLine.c)));
+  document.body.appendChild(table);
+
   plot = new Plot(1400, 700);
   plot.setGridOn(true);
-  plot.setAxisLabels('Time since epoch (ms)', 'Time (mins)');
+  plot.setAxisLabels('Time (weeks)', 'Time (mins)');
   plot.plot(
-    commutes.map(function(commute) { return commute.beginTimestamp; }),
-    commutes.map(function(commute) { return commute.duration / 60; }),
+    weeks,
+    seconds.map(function(x) { return x / 60; }),
     {
       lineStyle: '',
       markers: '.',
+    });
+  plot.setHoldOn(true);
+  var xAxis = [plot.getAxisRanges()[0].min(), plot.getAxisRanges()[0].max()];
+  plot.plot(
+    xAxis,
+    xAxis.map(function(x) { return (bestFitLine.m * x + bestFitLine.c) / 60; }),
+    {
+      lineColor: 'red'
     });
 
   document.body.appendChild(plot.canvas());
