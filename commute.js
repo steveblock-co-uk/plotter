@@ -34,12 +34,21 @@ function bestFit(x, y) {
   };
 }
 
+function pad(num, size) {
+  var s = num + '';
+  while (s.length < size) {
+    s = '0' + s;
+  }
+  return s;
+}
+
 function print(x, multipliers, separator) {
   var result = '';
   for (var i = 0; i < multipliers.length - 1; ++i) {
     x = Math.floor(x / multipliers[i]);
     var value = x % (multipliers[i + 1]);
-    result = separator + value + result;
+    var length = Math.ceil(Math.log10(multipliers[i + 1]));
+    result = separator + pad(value, length) + result;
   }
   if (multipliers.length > 0) {
     var value = Math.floor(x / multipliers[multipliers.length - 1]);
@@ -100,8 +109,8 @@ function plot() {
   var table = document.createElement('table');
   table.appendChild(tableRow('Count', weeks.length));
   table.appendChild(tableRow('Best (mm:ss)', printSecondsAsMinutesSeconds(seconds.reduce(function(a, b) { return Math.min(a, b); }, Infinity))));
-  table.appendChild(tableRow('Weekly delta (s)', Math.round(bestFitLine.m)));
-  table.appendChild(tableRow('Predicted (s)', printSecondsAsMinutesSeconds(bestFitLine.m * nowWeeks + bestFitLine.c)));
+  table.appendChild(tableRow('Weekly delta (s)', bestFitLine.m.toFixed(1)));
+  table.appendChild(tableRow('Predicted (mm:ss)', printSecondsAsMinutesSeconds(bestFitLine.m * nowWeeks + bestFitLine.c)));
   document.body.appendChild(table);
 
   plot = new Plot(1400, 700);
