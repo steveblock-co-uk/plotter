@@ -102,10 +102,13 @@
         ];
         var campervanHeight = Math.max((1949 + 1947) / 2, 1958, (1978 + 1986) / 2, (1970 + 1990) / 2, (1975 + 1992) / 2, (1975 + 1976) / 2);  // Measured
         //var campervanHeight = 78 * 25.4;  // http://www.gowesty.com/tech-article-details.php?id=24
+        var campervanHeight = 2070;
         var doorHeight = 2112;  // Worst-case for centre line of campervan
         var doorXCoordinate = 45;
         var wheelbase = 2920;
+        var wheelbase = 2800;
         var wheelRadius = 300;  // Measured
+        var wheelRadius = 225 * 0.75 + 15 * 25.4 / 2;  // 225/75R15
 
         var driveway = PolyCurve.fromPoints(data.map(function(entry) {
           return new Vector(Math.min(valueOrInfinity(entry.west), valueOrInfinity(entry.centre), valueOrInfinity(entry.east)), entry.y);
