@@ -96,6 +96,7 @@ function plot() {
       activity.startLatitude <= 50 &&
       activity.startLongitude >= -124 &&
       activity.startLongitude <= -123 &&
+      activity.duration <= 35 * 60 &&
       true;
   });
 
