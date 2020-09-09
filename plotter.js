@@ -143,8 +143,14 @@ Range.prototype.expand = function(x) {
 Range.prototype.fraction = function(x) {
   return (x - this.min_) / this.range();
 };
+Range.prototype.contains = function(x) {
+  return this.min_ <= x && this.max_ >= x;
+};
 Range.prototype.toString = function() {
   return '{min: ' + this.min_ + '; max: ' + this.max_ + '}';
+};
+Range.centredOn = function(centre, halfWidth) {
+  return new Range(centre - halfWidth, centre + halfWidth);
 };
 
 /////////////////////////////////////////////////////////////////////////
