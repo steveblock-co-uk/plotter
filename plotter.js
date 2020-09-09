@@ -3,6 +3,156 @@
 // Force axis tick at zero
 // Draw axis zero in solid line
 
+class Unit {
+  constructor() {
+  }
+
+  // Returns an object {start, end} representing the range of the unit that
+  // spans the specified value.
+  getRangeSpanning(x) {
+  }
+
+  // Gets the size of the specified range in this Unit. The return value is an
+  // object with properties start, middle and end. middle is the number of Units
+  // wholy contained in the range. Start and end are fractions in [0, 1)
+  // describing the portion of the adjacent Units that overlap the range.
+  getSize(range) {
+  }
+
+  // Gets the values of this Unit contained in the specified range. The return
+  // value is a list of values as strings.
+  getContainedValues(range) {
+  }
+}
+
+// A Unit for dates. Raw values are in milliseconds.
+class DateUnit extends Unit {
+  constructor(millisNominalMultiplier, getter, setter, indexBase) {
+    super();
+    this.millisNominalMultiplier_ = millisNominalMultiplier;
+    this.getter_ = getter;
+    this.setter_ = setter;
+    this.indexBase_ = indexBase;
+  }
+
+  getRangeSpanning(millis) {
+    var start = new Date(millis);
+
+    // TODO: DateUnit needs to know about smaller units.
+
+    var calendarUnitProperties = CalendarUnitProperties.of(calendarUnit);
+    var unit = calendarUnitProperties.getNextSmaller()
+    while (unit !== null) {
+      CalendarUnitProperties.of(unit).getDateSetter().apply(start, [CalendarUnitProperties.of(unit).getIsOneBased() ? 1 : 0]);
+      unit = CalendarUnitProperties.of(unit).getNextSmaller();
+    }
+    var end = clone(start);
+    calendarUnitProperties.getDateSetter().apply(end, [calendarUnitProperties.getDateGetter().apply(end) + 1]);
+    return new TimePeriod(start, end);
+  }
+
+  getSize(range) {
+  var startPeriod = TimePeriod.spanning(this.start_, calendarUnit, timeZone);
+  var startFraction = 1 - startPeriod.getFraction(this.start_);
+  var endPeriod = TimePeriod.spanning(this.end_, calendarUnit, timeZone);
+  var endFraction = endPeriod.getFraction(this.end_);
+
+  // Calculate the number of periods in the middle.
+  var calendarUnitProperties = CalendarUnitProperties.of(calendarUnit);
+  var t = clone(startPeriod.getEnd());
+  var count = 0;
+  while (t.getTime() !== endPeriod.getStart().getTime()) {
+    count += Math.round((endPeriod.getStart().getTime() - t.getTime()) / calendarUnitProperties.getMillisNominalMultiplier());
+    t = clone(startPeriod.getEnd());
+    calendarUnitProperties.getDateSetter().apply(t, [calendarUnitProperties.getDateGetter().apply(t) + count]);
+  }
+
+  // Force startFraction to [0, 1)
+  if (startFraction === 1) {
+    startFraction = 0;
+    count -= 1;
+  }
+
+  return {
+    start: startFraction,
+    middle: count,
+    end: endFraction,
+  };
+};
+
+}
+
+class Millisecond extends DateUnit {
+  constructor() {
+    super(1, Date.prototype.getMilliseconds, Date.prototype.setMilliseconds, 0);
+  }
+}
+class Second extends DateUnit {
+  constructor() {
+    super(1000, Date.prototype.getSeconds, Date.prototype.setSeconds, 0);
+  }
+}
+class Minute extends DateUnit {
+  constructor() {
+    super(1000 * 60, Date.prototype.getMinutes, Date.prototype.setMinutes, 0);
+  }
+}
+class Hour extends DateUnit {
+  constructor() {
+    super(1000 * 60 * 60, Date.prototype.getHours, Date.prototype.setHours, 0);
+  }
+}
+class Day extends DateUnit {
+  constructor() {
+    super(1000 * 60 * 60 * 24, Date.prototype.getDate, Date.prototype.setDate, 1);
+  }
+}
+class Month extends DateUnit {
+  constructor() {
+    super(1000 * 60 * 60 * 365.25 / 12, Date.prototype.getMonth, Date.prototype.setMonth, 0);
+  }
+}
+class Year extends DateUnit {
+  constructor() {
+    super(1000 * 60 * 60 * 365.25, Date.prototype.getFullYear, Date.prototype.setFullYear, 0);
+  }
+}
+  
+class UnitHierarchy {
+  constructor() {
+  }
+
+  // Gets the units of this hierarchy, as an array in order of increasing size.
+  getUnits() {
+  }
+}
+
+// A hierarchy of units for expressing an instant in time as a calendar date
+// and time. The base unit is the millisecond. Uses the Gregorian calendar and
+// the local time zone.
+class CalendarUnitHierarchy {
+  constructor() {
+    super();
+    this.units_ = [
+      new Millisecond(),
+      new Second(),
+      new Minute(),
+      new Hour(),
+      new Day(),
+      new Month()
+      new Year(),
+    ];
+  }
+
+  getUnits() {
+    return this.units_;
+  }
+}
+
+
+
+
+
 function arrayMin(x) {
   var result = x[0];
   for (var i = 1; i < x.length; i++) {
