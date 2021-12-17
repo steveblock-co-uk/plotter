@@ -65,6 +65,9 @@
         document.body.appendChild(plot.canvas());
         document.body.appendChild(plot.legendCanvas());
 
+        var alfine_8 = [0.53, 0.64, 0.75, 0.85, 1, 1.22, 1.42, 1.62];
+        var alfine_11 = [0.53, 0.68, 0.77, 0.88, 1.00, 1.13, 1.29, 1.461, 1.67, 1.89, 2.15];
+
         var indie = new ChainDrivetrain([28, 38, 48], [12, 14, 16, 18, 21, 24, 28, 32]);
         var allez = new ChainDrivetrain([34, 50], [12, 13, 14, 15, 17, 19, 21, 24, 27]);
         var threshold = new ChainDrivetrain([36, 46], [11, 12, 14, 16, 18, 21, 24, 28, 32]);
@@ -72,13 +75,17 @@
         // https://www.shandcycles.com/rohloff-bikes/
         // https://www.rohloff.de/en/technology/workshop/sprocket-ratios/index.html
         var stoater = new GearedHubDrivetrain(50, 17, [0.279, 0.316, 0.360, 0.409, 0.464, 0.528, 0.600, 0.682, 0.774, 0.881, 1.000, 1.135, 1.292, 1.467]);
+        var rxs_alfine_8 = new GearedHubDrivetrain(50, 17, alfine_8);
+        var rxs_alfine_11 = new GearedHubDrivetrain(50, 17, alfine_11);
 
         new DrivetrainPlotter(plot, indie, 0, 'black', 'Indie');
         new DrivetrainPlotter(plot, allez, 1, 'green', 'Allez');
         new DrivetrainPlotter(plot, threshold, 2, 'blue', 'Threshold');
         new DrivetrainPlotter(plot, rxs, 3, 'red', 'RXS');
+        new DrivetrainPlotter(plot, rxs_alfine_8, 4, 'orange', 'RXS 8');
+        new DrivetrainPlotter(plot, rxs_alfine_11, 5, 'purple', 'RXS 11');
 
-        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 4));
+        plot.setAxisRanges(plot.getAxisRanges()[0], new Range(0, 6));
       }
     </script>
     <style type="text/css">
