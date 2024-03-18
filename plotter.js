@@ -224,9 +224,14 @@ Rect.prototype.toString = function() {
 
 /////////////////////////////////////////////////////////////////////////
 function Axes() {
+  // TOOD: Factor out Axis class
   this.gridOn_ = false;
   this.xLabel_ = '';
   this.yLabel_ = '';
+  this.rightYLabel_ = '';
+  this.xRange_ = new Range();
+  this.yRange_ = new Range();
+  this.rightYRange_ = new Range();
 }
 Axes.prototype.setXValues = function(range, tick) {
   this.xRange_ = range;
@@ -236,11 +241,18 @@ Axes.prototype.setYValues = function(range, tick) {
   this.yRange_ = range;
   this.yTick_ = tick;
 };
+Axes.prototype.setRightYValues = function(range, tick) {
+  this.rightYRange_ = range;
+  this.rightYTick_ = tick;
+};
 Axes.prototype.xRange = function() {
   return this.xRange_;
 };
 Axes.prototype.yRange = function() {
   return this.yRange_;
+};
+Axes.prototype.rightYRange = function() {
+  return this.rightYRange_;
 };
 Axes.prototype.xTick = function() {
   return this.xTick_;
@@ -248,18 +260,25 @@ Axes.prototype.xTick = function() {
 Axes.prototype.yTick = function() {
   return this.yTick_;
 };
+Axes.prototype.rightYTick = function() {
+  return this.rightYTick_;
+};
+// TODO: Make grid specific to an axis
 Axes.prototype.setGridOn = function(gridOn) {
   this.gridOn_ = gridOn;
 };
 // Only sets if label is not null or undefined
-Axes.prototype.setLabels = function(xLabel, yLabel) {
+Axes.prototype.setLabels = function(xLabel, yLabel, rightYLabel) {
+  // TODO Should check for undefined?
   if (xLabel != null)
     this.xLabel_ = xLabel;
   if (yLabel != null)
     this.yLabel_ = yLabel;
+  if (rightYLabel != null)
+    this.rightYLabel_ = rightYLabel;
 };
 Axes.prototype.labels = function() {
-  return [this.xLabel_, this.yLabel_];
+  return [this.xLabel_, this.yLabel_, this.rightYLabel];
 };
 // TODO: Allow force of equal scales?
 Axes.prototype.draw = function(context, rect) {
@@ -321,6 +340,35 @@ Axes.prototype.draw = function(context, rect) {
     // TODO: Orient this vertically.
     context.fillText(this.yLabel_, rect.x() - 5 * tickLength - maxTextWidth, rect.y() + rect.height() / 2 + fontHeight / 2);
   }
+
+  context.textAlign = "start";
+  var maxTextWidth = 0;
+  var yDecimalPlaces = calculateDecimalPlaces(this.rightYTick_);
+  var yTickFirst = roundToMultiple(this.rightYRange_.min(), this.rightYTick_, true);
+  // Calculate the number of ticks like this to avoid cumulative rounding errors when adding yTick_.
+  var yNumTicks = Math.floor((this.rightYRange_.max() - yTickFirst) / this.rightYTick_) + 1;
+  for (var i = 0; i < yNumTicks; ++i) {
+    var y = yTickFirst + i * this.rightYTick_;
+    context.beginPath();
+    var yCoord = rect.yInterpolate(1 - this.rightYRange_.fraction(y));
+    context.moveTo(rect.x() + rect.width() + tickLength, yCoord); 
+    context.lineTo(rect.x() + rect.width(), yCoord);
+    var text = y.toFixed(yDecimalPlaces);
+    maxTextWidth = Math.max(maxTextWidth, context.measureText(text).width);
+    context.fillText(text, rect.x() + rect.width() + 2 * tickLength, yCoord + fontHeight / 2);
+    context.stroke();
+    if (this.gridOn_) {
+      context.setLineDash([1, 1]);
+      context.moveTo(rect.x(), yCoord);
+      context.lineTo(rect.xMax(), yCoord);
+      context.stroke();
+      context.setLineDash([]);
+    }
+  }
+  if (this.rightYLabel_ !== '') {
+    // TODO: Orient this vertically.
+    context.fillText(this.rightYLabel_, rect.x() - 5 * tickLength - maxTextWidth, rect.y() + rect.height() / 2 + fontHeight / 2);
+  }
 };
 
 /////////////////////////////////////////////////////////////////////////
@@ -350,8 +398,8 @@ Plot.prototype.canvas = function() {
 Plot.prototype.setHoldOn = function(holdOn) {
   this.holdOn_ = holdOn;
 };
-Plot.prototype.setAxisLabels = function(xAxisLabel, yAxisLabel) {
-  this.axes_.setLabels(xAxisLabel, yAxisLabel);
+Plot.prototype.setAxisLabels = function(xAxisLabel, yAxisLabel, rightYAxisLabel) {
+  this.axes_.setLabels(xAxisLabel, yAxisLabel, rightYAxisLabel);
   this.redraw_();
 };
 Plot.prototype.setGridOn = function(gridOn) {
@@ -362,6 +410,7 @@ Plot.prototype.clearData_ = function() {
   this.dataSeries_ = [];
   this.xRange_ = new Range();
   this.yRange_ = new Range();
+  this.rightYRange_ = new Range();
 };
 Plot.prototype.createCanvas_ = function() {
   this.canvas_ = document.createElement('canvas');
@@ -402,22 +451,24 @@ Plot.applyStyleDefaults = function(style) {
   }
   return style;
 };
-Plot.prototype.plot = function(x, y, style, name) {
+Plot.prototype.plot = function(x, y, style, name, useRightYAxis) {
   if (x.length !== y.length) {
     throw new Error('Can not plot data series of lengths ' + x.length + ' and ' + y.length);
   }
   style = Plot.applyStyleDefaults(style);
-
+  useRightYAxis = useRightYAxis === true ? true : false;
   if (!this.holdOn_) {
     this.clearData_();
   }
-  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle, style.markerColors, name);
+  this.updateData_(x, y, style.lineColor, style.markers, style.lineStyle, style.markerColors, name, useRightYAxis);
   if (!this.xAxisRangeForced_) {
     this.setXAxisRange_();
   }
   if (!this.yAxisRangeForced_) {
     this.setYAxisRange_();
   }
+  // TODO: Add support for forcing right Y axis
+  this.setRightYAxisRange_();
   this.redraw_();
   this.redrawLegend_();
 };
@@ -440,20 +491,21 @@ Plot.prototype.redraw_ = function() {
   this.axes_.draw(this.context_, this.plotRect_);
   for (var i = 0; i < this.dataSeries_.length; i++ ) {
     var data = this.dataSeries_[i];
+    yCoordFunction = data.useRightYAxis ? Plot.prototype.rightYCoord_.bind(this) : Plot.prototype.yCoord_.bind(this);
     this.context_.strokeStyle = data.lineColor;
     // Line
     if (data.lineStyle !== '') {
       this.context_.setLineDash(getLineDash(data.lineStyle));
       for (var j = 1; j < data.x.length; j++ ) {
-        this.drawLine_(this.xCoord_(data.x[j - 1]), this.yCoord_(data.y[j - 1]),
-                       this.xCoord_(data.x[j]), this.yCoord_(data.y[j]));
+        this.drawLine_(this.xCoord_(data.x[j - 1]), yCoordFunction(data.y[j - 1]),
+                       this.xCoord_(data.x[j]), yCoordFunction(data.y[j]));
       }
       this.context_.setLineDash([]);
     }
     var radius = 3;
     for (var j = 0; j < data.x.length; j++ ) {
       var xCoord = this.xCoord_(data.x[j]);
-      var yCoord = this.yCoord_(data.y[j]);
+      var yCoord = yCoordFunction(data.y[j]);
       if (!this.plotRect_.containsOrOnEdge(xCoord, yCoord)) {
         continue;
       }
@@ -513,12 +565,17 @@ Plot.prototype.redrawLegend_ = function(x, y, lineColor, markers, lineStyle, mar
   this.legendContext_.setLineDash([]);
   this.legendContext_.strokeRect(0, 0, this.legendWidth_, fontHeight * 1.2 * filteredDataSeries.length + 20);
 };
-Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors, name) {
-  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors, name: name});
+Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors, name, useRightYAxis) {
+  this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors, name: name, useRightYAxis: useRightYAxis});
   this.xRange_.expand(arrayMin(x));
   this.xRange_.expand(arrayMax(x));
-  this.yRange_.expand(arrayMin(y));
-  this.yRange_.expand(arrayMax(y));
+  if (useRightYAxis) {
+    this.rightYRange_.expand(arrayMin(y));
+    this.rightYRange_.expand(arrayMax(y));
+  } else {
+    this.yRange_.expand(arrayMin(y));
+    this.yRange_.expand(arrayMax(y));
+  }
 };
 Plot.prototype.setXAxisRange_ = function(range) {
   // This will be called again when some data is added in plot().
@@ -531,12 +588,24 @@ Plot.prototype.setXAxisRange_ = function(range) {
 };
 Plot.prototype.setYAxisRange_ = function(range) {
   // This will be called again when some data is added in plot().
-  if (this.dataSeries_.length === 0) {
+  // TODO: IS it OK to early-out here if data is present for the other axis?
+  if (this.dataSeries_.filter(function(ds) { return !ds.useRightYAxis; }).length === 0) {
     return;
   }
   var effectiveRange = range ? range : calculateAxisRange(this.yRange_, this.forceYAxisZero_);
   var tick = calculateAxisTick(effectiveRange.range());
   this.axes_.setYValues(effectiveRange, tick);
+};
+Plot.prototype.setRightYAxisRange_ = function(range) {
+  // This will be called again when some data is added in plot().
+  // TODO: IS it OK to early-out here if data is present for the other axis?
+  if (this.dataSeries_.filter(function(ds) { return ds.useRightYAxis; }).length === 0) {
+    return;
+  }
+  // TODO: Support forcing right Y axis zero
+  var effectiveRange = range ? range : calculateAxisRange(this.rightYRange_, false);
+  var tick = calculateAxisTick(effectiveRange.range());
+  this.axes_.setRightYValues(effectiveRange, tick);
 };
 // Clips to plot rect.
 Plot.prototype.drawLine_ = function(x1Coord, y1Coord, x2Coord, y2Coord) {
@@ -559,6 +628,9 @@ Plot.prototype.xCoord_ = function(x) {
 };
 Plot.prototype.yCoord_ = function(y) {
   return this.plotRect_.yInterpolate(1 - this.axes_.yRange().fraction(y));
+};
+Plot.prototype.rightYCoord_ = function(y) {
+  return this.plotRect_.yInterpolate(1 - this.axes_.rightYRange().fraction(y));
 };
 // When in auto-axis mode, forces the axis range to include zero. Use 1
 // arg to control both axes, 2 args to control x and y separately.
