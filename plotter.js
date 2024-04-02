@@ -3,6 +3,166 @@
 // Force axis tick at zero
 // Draw axis zero in solid line
 
+function NumberAxisRepresentation() {
+
+}
+
+/*
+Have a getLevel(min, max) function?
+Doesn't work. eg (19, 35) -> 100, but reasonable bounds would be [10, 40]
+Caller can't work this out
+This class will have to have knowledge of how to build axis range.
+Cannot just return the numeric value, because caller can;t know how to format
+(eg precision to use, which TZ to use around DST transition)
+ */
+// Returns a list of tuples. Each tuple is the numeric value and formatted string
+DecimalNumberAxisRepresentation.prototype.getAxisValues = function(
+    dataRange,
+    axisRange = undefined,
+    forceZero = false,
+    suggestedTickCount = 10) {
+  if (axisRange === undefined) {
+    if (forceZero) {
+      dataRange = dataRange.expand(0);
+    }
+    var multiple = getRangeMultiple(dataRange.range());
+    axisRange = new Range(roundToMultiple(dataRange.min(), multiple, false),
+        roundToMultiple(dataRange.max(), multiple, true));
+  }
+  var tick = calculateAxisTick(axisRange.range());
+  // We do the loop over integers to avoid cumulative errors. But there's still a risk of ticks not 'lining up' with the
+  // range due to rounding errors. We should use BigDecimal.
+  result = [];
+  for (i = Math.floor(axisRange.min() / tick); i <= Math.ceil(axisRange.max() / tick); ++i) {
+    result.append([i * step, i * step]);
+  }
+  return result;
+}
+
+// We only need values to distinguish components that don't use base 10
+enum Component {
+  SECOND,
+  MINUTE,
+  HOUR,
+  DAY,
+  MONTH,
+  YEAR
+};
+
+// Assumes that the underlying numeric value is epoch millis.
+function DateTimeNumberAxisRepresentation(tz) {
+  this.tz_ = tz;
+}
+
+DateTimeNumberAxisRepresentation.prototype.getLargestDifferingComponent = function(dataRange) {
+  var minDate = new Date(dataRange.min(), tz = this.tz_);
+  var maxDate = new Date(dataRange.min(), tz = this.tz_);
+  if (minData.getFullYear() != maxDate.getFullYear()) {
+    return Component.YEAR;
+  } else if (minData.getMonth() != maxDate.getMonth()) {
+    return Component.MONTH;
+  } else if (minData.getDay() != maxDate.getDay()) {
+    return Component.DAY;
+  } else if (minData.getHour() != maxDate.getHour()) {
+    return Component.HOUR;
+  } else if (minData.getMinute() != maxDate.getMinute()) {
+    return Component.MINUTE;
+  } else {
+    return Component.SECOND;
+  }
+}
+
+// Gets the number of values of the specified component in the instance at the specified date.
+// eg getCount(2024-02-05 12:34:56, Day) -> 29
+function getCount(date: Date, component, Component) {
+  if (component >= Component.SECOND) {
+    date.setSecond(0);
+  }
+  if (component >= Component.MINUTE) {
+    date.setMinute(0);
+  }
+  if (component >= Component.HOUR) {
+    date.setHour(0);
+  }
+  if (component >= Component.DAY) {
+    date.setDay(1);
+  }
+  if (component >= Component.MONTH) {
+    date.setMonth(0); // TOOD: 1 based?
+  }
+  if (component >= Component.YEAR) {
+    date.setFullYear(0);
+  }
+
+}
+
+// For decimals we calculate the range based on their being a 'nice' multiplier for each limit eg 1, 2, 5. And we
+// calculate the tick multiplier based on the range. Ticks are placed every tick multiplier, irrespective of the range.
+// This always result in hitting the next x10 multiplier.
+
+// I'm not sure this always applies to dates. For days, there is no nice multiplier. So we should
+// probably just use the nearest 1 day for day limits. But what about tick marks? Whatever tick multiplier we use it won't
+// always align with month boundaries. Does this matter? Maybe any time the tick marks are spaced less than month we
+// shouldn't care? But what about 2024-01-10 to 2024-04-10? Month ticks would only have 3, which is not enough.
+// Half-months would have 5 which is about right, but where to place them? If we just base on 91 days we would choose
+// 10 day ticks, but where to start? day 1 of year? Would probaly not move to monhs until we got to 5 months range.
+
+DateTimeNumberAxisRepresentation.prototype.getAxisRangeSeconds = function(dataRangeSeconds) {
+  // Just use DecimalNumberAxisRepresentation. We rely on the fact that if we pass in a range within [0, 60] the result
+  // will remain in this range.
+}
+
+// this can't be a range of minutes. will need to pass the complete date object. becase for other components, eg year,
+// we need to know the instant to know how to round at lower components (eg months).
+DateTimeNumberAxisRepresentation.prototype.getAxisRangeMinutes = function(dataRangeMinutes) {
+  // We do not DecimalNumberAxisRepresentation because we wish to favor multiples of 5.
+}
+
+// We assme that we always use the same multiple in each instance of a component. eg if a range spans two months, we
+// use the same multiple of numbers of days in each case. No. not true. We do not wish to go 2024-02-27 to 2024-03-02,.
+DateTimeNumberAxisRepresentation.prototype.getRangeMultiple = function(
+
+
+DateTimeNumberAxisRepresentation.prototype.getAxisValues = function(
+    dataRange,
+    axisRange = undefined,
+    forceZero = false,
+    suggestedTickCount = 10) {
+  if (axisRange === undefined) {
+    if (forceZero) {
+      dataRange = dataRange.expand(0);
+    }
+    var largestDifferingComponent = this.getLargestDifferingComponent(dataRange);
+    var multiple = getRangeMultiple(dataRange.range());
+    axisRange = new Range(roundToMultiple(dataRange.min(), multiple, false),
+        roundToMultiple(dataRange.max(), multiple, true));
+  }
+  var tick = calculateAxisTick(axisRange.range());
+  // We do the loop over integers to avoid cumulative errors. But there's still a risk of ticks not 'lining up' with the
+  // range due to rounding errors. We should use BigDecimal.
+  result = [];
+  for (i = Math.floor(axisRange.min() / tick); i <= Math.ceil(axisRange.max() / tick); ++i) {
+    result.append([i * step, i * step]);
+  }
+  return result;
+}
+
+function getRangeMultiple(a) {
+  var order = calculateOrder(a);
+  x = a / order;
+  // Purely empirical
+  if (x > 6) {
+    return 2 * order;
+  }
+  if (x > 4) {
+    return order;
+  }
+  if (x > 2) {
+    return 0.5 * order;
+  }
+  return 0.2 * order;
+}
+
 function arrayMin(x) {
   var result = x[0];
   for (var i = 1; i < x.length; i++) {
@@ -18,7 +178,7 @@ function arrayMax(x) {
   return result;
 }
 function getMultiple(x) {
-  if (x < 1 || x > 10) {
+  if (x < 1 || x >= 10) {
     throw new Error('Out of range: ' + x);
   }
   // Purely empirical
@@ -50,9 +210,9 @@ function roundTowardsZero(x, multiple) {
   return sign * multiple * Math.ceil(Math.abs(x) / multiple);
 }
 function calculateAxisRange(dataRange, forceZero) {
-  var localDataRange = new Range(dataRange.min(), dataRange.max());
+  var localDataRange = dataRange;
   if (forceZero) {
-    localDataRange.expand(0);
+    localDataRange = localDataRange.expand(0);
   }
   var order = calculateOrder(localDataRange.range());
   var value = localDataRange.range() / order;
@@ -136,8 +296,7 @@ Range.prototype.range = function() {
   return this.max_ - this.min_;
 };
 Range.prototype.expand = function(x) {
-  this.min_ = Math.min(this.min_, x);
-  this.max_ = Math.max(this.max_, x);
+  return new Range(Math.min(this.min_, x), Math.max(this.max_, x));
 };
 // Gets the fraction through the range that value x is.
 Range.prototype.fraction = function(x) {
@@ -567,14 +726,14 @@ Plot.prototype.redrawLegend_ = function(x, y, lineColor, markers, lineStyle, mar
 };
 Plot.prototype.updateData_ = function(x, y, lineColor, markers, lineStyle, markerColors, name, useRightYAxis) {
   this.dataSeries_.push({x: x, y: y, lineColor: lineColor, markers: markers, lineStyle: lineStyle, markerColors: markerColors, name: name, useRightYAxis: useRightYAxis});
-  this.xRange_.expand(arrayMin(x));
-  this.xRange_.expand(arrayMax(x));
+  this.xRange_ = this.xRange_.expand(arrayMin(x));
+  this.xRange_ = this.xRange_.expand(arrayMax(x));
   if (useRightYAxis) {
-    this.rightYRange_.expand(arrayMin(y));
-    this.rightYRange_.expand(arrayMax(y));
+    this.rightYRange_ = this.rightYRange_.expand(arrayMin(y));
+    this.rightYRange_ = this.rightYRange_.expand(arrayMax(y));
   } else {
-    this.yRange_.expand(arrayMin(y));
-    this.yRange_.expand(arrayMax(y));
+    this.yRange_ = this.yRange_.expand(arrayMin(y));
+    this.yRange_ = this.yRange_.expand(arrayMax(y));
   }
 };
 Plot.prototype.setXAxisRange_ = function(range) {
