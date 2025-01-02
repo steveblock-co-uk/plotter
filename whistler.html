@@ -9,37 +9,58 @@
   <script src = "plotter.js"></script>
   <script>
     // From https://docs.google.com/spreadsheets/d/114QBiJ4iRnfqn8Xbwlr1X6gfs9eVqLszWsW_gtUhUmU/edit?gid=0#gid=0
-    data = {
-      "2023-12-03": "Creekside Gondola, Big Red, Big Red, Harmony, Harmony, Harmony, Harmony, Big Red, Creekside Gondola (down)",
-      "2023-12-10": "Creekside Gondola, Big Red, Big Red, Harmony, Harmony, Harmony, Harmony, Big Red, Creekside Gondola (down)",
-      "2023-12-24": "Creekside Gondola, Big Red, Big Red, Harmony, Harmony, Harmony, Harmony, Big Red, Creekside Gondola (down)",
-      "2023-12-29": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Emerald, Creekside Gondola (down)",
-      "2023-12-31": "Whistler Village Gondola, Big Red, Peak, Peak, Big Red, Harmony, Creekside Gondola (down)",
-      "2024-01-01": "Excalibur Gondola, Excelerator, Jersey Cream, 7th Heaven, 7th Heaven, 7th Heaven, Harmony, Harmony, Harmony, Creekside Gondola (down)",
-      "2024-01-07": "Creekside Gondola, Big Red, Harmony, Symphony, Symphony, Harmony, Harmony, Garbanzo, Creekside Gondola (down)",
-      "2024-01-14": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Peak, Big Red, Peak, Peak, Peak, Peak, Harmony, Harmony",
-      "2024-01-21": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Peak, Big Red, Peak, Peak, Peak",
-      "2024-01-28": "Creekside Gondola, Big Red, Emerald, Catskinner, Catskinner, Catskinner, Glacier, Glacier, Jersey Cream, Glacier, Jersey Cream",
-      "2024-02-04": "Creekside Gondola, Big Red, 7th Heaven, 7th Heaven, 7th Heaven, Glacier, Jersey Cream, Peak, Peak, Big Red, T-Bars",
-      "2024-02-11": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Harmony, Symphony, Symphony, Harmony, Peak, Big Red",
-      "2024-02-18": "Creekside Gondola, Big Red, Emerald, Peak, Peak, Harmony, Symphony, Symphony, Flute, Symphony, Flute, Symphony, Harmony, Harmony, Big Red, T-Bars",
-      "2024-02-19": "Creekside Gondola, Big Red, T-Bars, Big Red, 7th Heaven, 7th Heaven, 7th Heaven, Glacier, Jersey Cream, Big Red, Big Red",
-      "2024-02-25": "Creekside Gondola, Big Red, Emerald, Big Red, Big Red, Big Red",
-      "2024-03-03": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Symphony, Harmony, Big Red, Peak, Peak",
-      "2024-03-10": "Creekside Gondola, Big Red, Garbanzo, Emerald, Harmony, Harmony, Big Red, T-Bars, Emerald",
-      "2024-03-15": "Creekside Gondola, Big Red, Emerald, Peak, Peak, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Emerald, Big Red, Big Red",
-      "2024-03-17": "Creekside Gondola, Big Red, Emerald, Peak, Peak, Peak, Peak, Big Red, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Big Red",
-      "2024-03-21": "Creekside Gondola, Big Red, Big Red, Emerald, Peak, Peak, Big Red, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Symphony, Symphony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Emerald, Emerald, Big Red",
-      "2024-03-24": "Creekside Gondola, Big Red, Emerald, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Big Red, Peak",
-      "2024-03-29": "Creekside Gondola, Big Red, Big Red, 7th Heaven, 7th Heaven, 7th Heaven, 7th Heaven",
-      "2024-03-31": "Creekside Gondola, Big Red, Big Red, Peak, Peak, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Creekside Gondola (down)",
-      "2024-04-01": "Excalibur Gondola, Blackcomb Gondola, Excelerator, Glacier, Showcase, Crystal Ridge, Jersey Cream, Catskinner, 7th Heaven, Magic Chair",
-      "2024-04-14": "Creekside Gondola, Big Red, Emerald, Emerald, Peak, T-Bars, Harmony, Symphony, Symphony, Symphony, Harmony, Harmony, Peak, Peak, Peak, Peak",
-      "2024-05-19": "Whistler Village Gondola, Big Red, Peak, Peak, Peak, Whistler Village Gondola Lower (down), Whistler Village Gondola, Harmony, Harmony, Harmony, Whistler Village Gondola Lower (down)",
-    };
+    seasons = [
+      {
+        name: "2023-2024",
+        start_date: new Date("2023-11-23"),
+        end_date: new Date("2024-05-20"),
+        pass_cost_dollars: 2789.33 / 2,
+        days: {
+          "2023-12-03": "Creekside Gondola, Big Red, Big Red, Harmony, Harmony, Harmony, Harmony, Big Red, Creekside Gondola (down)",
+          "2023-12-10": "Creekside Gondola, Big Red, Big Red, Harmony, Harmony, Harmony, Harmony, Big Red, Creekside Gondola (down)",
+          "2023-12-24": "Creekside Gondola, Big Red, Big Red, Harmony, Harmony, Harmony, Harmony, Big Red, Creekside Gondola (down)",
+          "2023-12-29": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Emerald, Creekside Gondola (down)",
+          "2023-12-31": "Whistler Village Gondola, Big Red, Peak, Peak, Big Red, Harmony, Creekside Gondola (down)",
+          "2024-01-01": "Excalibur Gondola, Excelerator, Jersey Cream, 7th Heaven, 7th Heaven, 7th Heaven, Harmony, Harmony, Harmony, Creekside Gondola (down)",
+          "2024-01-07": "Creekside Gondola, Big Red, Harmony, Symphony, Symphony, Harmony, Harmony, Garbanzo, Creekside Gondola (down)",
+          "2024-01-14": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Peak, Big Red, Peak, Peak, Peak, Peak, Harmony, Harmony",
+          "2024-01-21": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Peak, Big Red, Peak, Peak, Peak",
+          "2024-01-28": "Creekside Gondola, Big Red, Emerald, Catskinner, Catskinner, Catskinner, Glacier, Glacier, Jersey Cream, Glacier, Jersey Cream",
+          "2024-02-04": "Creekside Gondola, Big Red, 7th Heaven, 7th Heaven, 7th Heaven, Glacier, Jersey Cream, Peak, Peak, Big Red, T-Bars",
+          "2024-02-11": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Harmony, Harmony, Symphony, Symphony, Harmony, Peak, Big Red",
+          "2024-02-18": "Creekside Gondola, Big Red, Emerald, Peak, Peak, Harmony, Symphony, Symphony, Flute, Symphony, Flute, Symphony, Harmony, Harmony, Big Red, T-Bars",
+          "2024-02-19": "Creekside Gondola, Big Red, T-Bars, Big Red, 7th Heaven, 7th Heaven, 7th Heaven, Glacier, Jersey Cream, Big Red, Big Red",
+          "2024-02-25": "Creekside Gondola, Big Red, Emerald, Big Red, Big Red, Big Red",
+          "2024-03-03": "Creekside Gondola, Big Red, Harmony, Harmony, Harmony, Symphony, Harmony, Big Red, Peak, Peak",
+          "2024-03-10": "Creekside Gondola, Big Red, Garbanzo, Emerald, Harmony, Harmony, Big Red, T-Bars, Emerald",
+          "2024-03-15": "Creekside Gondola, Big Red, Emerald, Peak, Peak, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Emerald, Big Red, Big Red",
+          "2024-03-17": "Creekside Gondola, Big Red, Emerald, Peak, Peak, Peak, Peak, Big Red, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Big Red",
+          "2024-03-21": "Creekside Gondola, Big Red, Big Red, Emerald, Peak, Peak, Big Red, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Symphony, Symphony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Emerald, Emerald, Big Red",
+          "2024-03-24": "Creekside Gondola, Big Red, Emerald, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Big Red, Peak",
+          "2024-03-29": "Creekside Gondola, Big Red, Big Red, 7th Heaven, 7th Heaven, 7th Heaven, 7th Heaven",
+          "2024-03-31": "Creekside Gondola, Big Red, Big Red, Peak, Peak, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Creekside Gondola (down)",
+          "2024-04-01": "Excalibur Gondola, Blackcomb Gondola, Excelerator, Glacier, Showcase, Crystal Ridge, Jersey Cream, Catskinner, 7th Heaven, Magic Chair",
+          "2024-04-14": "Creekside Gondola, Big Red, Emerald, Emerald, Peak, T-Bars, Harmony, Symphony, Symphony, Symphony, Harmony, Harmony, Peak, Peak, Peak, Peak",
+          "2024-05-19": "Whistler Village Gondola, Big Red, Peak, Peak, Peak, Whistler Village Gondola Lower (down), Whistler Village Gondola, Harmony, Harmony, Harmony, Whistler Village Gondola Lower (down)",
+        },
+      },
+      {
+        name: "2024-2025",
+        start_date: new Date("2024-11-21"),
+        pass_cost_dollars: (148.18 + 2604.64) / 2,
+        days: {
+          "2024-11-24": "Creekside Gondola, Big Red, Emerald, Big Red, Franz's Chair, Creekside Gondola (down)",
+          "2024-12-08": "Excalibur Gondola, Excelerator, Excelerator, Jersey Cream, Jersey Cream, Blackcomb Gondola Upper, Catskinner, Excalibur Gondola (down), Whistler Village Gondola, Harmony, Harmony, Harmony, Fitzsimmons (down)",
+          "2024-12-22": "Creekside Gondola, Big Red, Big Red, Big Red, Big Red, Harmony, Harmony, Big Red, Big Red, Emerald, Creekside Gondola (down)",
+          "2025-01-05": "Creekside Gondola, Big Red, Emerald, Emerald, Peak, Peak, Peak, Peak, T-Bars, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Harmony, Peak, Creekside Gondola (down)",
+          "2025-01-12": "Creekside Gondola, Big Red, Peak, Big Red, Harmony, Harmony, Harmony, Harmony, Symphony, Harmony, Peak, Big Red, Peak",
+        },
+      },
+    ];
     // From https://en.wikipedia.org/wiki/Whistler_Blackcomb#Winter_lifts
     lift_vertical_metres = {
       "Blackcomb Gondola": 1180,
+      "Blackcomb Gondola Upper": 690,
       "Whistler Village Gondola": 1157,
       "Whistler Village Gondola Lower": 344,
       "Creekside Gondola": 644,
@@ -66,22 +87,33 @@
     }
 
     function plot() {
-      var season_start = new Date("2023-11-25");
-      var season_end = new Date("2024-05-20");
-      var season_pass_cost_dollars = 2789.33 / 2;
+      plot = new Plot(1400, 700, 200, 40);
+      plot.setGridOn(true);
+      plot.setAxisLabels('Time Since Start of Season (days)', 'Vertical (km)');
+      plot.setHoldOn(true);
+      seasons.forEach(add_season);
+      document.body.appendChild(plot.legendCanvas());
+      document.body.appendChild(plot.canvas());
+    }
+
+    function add_season(season, index) {
+      var season_start = season["start_date"];
+      var season_end = season["end_date"];
+      var season_pass_cost_dollars = season["pass_cost_dollars"];
+      var days = season["days"];
       time_millis = [season_start.getTime()];
       cumulative_vertical_metres = [0];
       last_cumulative_vertical_metres = cumulative_vertical_metres[0];
       cost_dollars_per_vertical_metre = [];
-      for (i = 0; i < Object.keys(data).length; i++) {
-        day = Object.keys(data)[i];
+      for (i = 0; i < Object.keys(days).length; i++) {
+        day = Object.keys(days)[i];
         day_start_millis = new Date(day).getTime();
         time_millis = time_millis.concat(day_start_millis + 8.5 * 60 * 60 * 1000);
         cumulative_vertical_metres = cumulative_vertical_metres.concat(last_cumulative_vertical_metres);
         if (last_cumulative_vertical_metres > 0) {
            cost_dollars_per_vertical_metre = cost_dollars_per_vertical_metre.concat(season_pass_cost_dollars / last_cumulative_vertical_metres);
         }
-        lifts = data[day].split(",").map(function(x) { return x.trim(); });
+        lifts = days[day].split(",").map(function(x) { return x.trim(); });
         vertical_metres = lifts.map(function(lift) {
           var is_down = false;
           if (lift.endsWith(" (down)")) {
@@ -100,29 +132,26 @@
         cost_dollars_per_vertical_metre = cost_dollars_per_vertical_metre.concat(season_pass_cost_dollars / new_cumulative_vertical_metres);
         last_cumulative_vertical_metres = new_cumulative_vertical_metres;
       }
-      time_millis = time_millis.concat(season_end.getTime());
+      var now = new Date();
+      time_millis = time_millis.concat((!season_end || season_end.getTime() > now.getTime()) ? now.getTime() : season_end.getTime());
       cumulative_vertical_metres = cumulative_vertical_metres.concat(last_cumulative_vertical_metres);
       cost_dollars_per_vertical_metre = cost_dollars_per_vertical_metre.concat(season_pass_cost_dollars / last_cumulative_vertical_metres);
-      plot = new Plot(1400, 700);
-      plot.setGridOn(true);
-      plot.setAxisLabels('Time Since Start of Season (days)', 'Vertical (km)');
       plot.plot(
         time_millis.map(function(x) { return (x - season_start.getTime()) / 1000 / 60 / 60 / 24; }),
         cumulative_vertical_metres.map(function(x) { return x / 1000; }),
         {
-          lineColor: 'red'
+          lineColor: index == 0 ? 'red' : 'blue'
         },
-        "Vertical Skiied");
-      plot.setHoldOn(true);
+        season["name"]);
       plot.plot(
         time_millis.slice(time_millis.length - cost_dollars_per_vertical_metre.length).map(function(x) { return (x - season_start.getTime()) / 1000 / 60 / 60 / 24; }),
         cost_dollars_per_vertical_metre.map(function(cost) { return cost === Infinity ? 60 : cost * 100; }),
         {
-          lineColor: 'blue'
+          lineColor: index == 0 ? 'red' : 'blue',
+          lineStyle: ':'
         },
-        "Cost per Vertical",
+        null,
         true);
-      document.body.appendChild(plot.canvas());
       console.log(cumulative_vertical_metres);
       console.log(cost_dollars_per_vertical_metre);
     }
